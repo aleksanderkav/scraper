@@ -125,13 +125,39 @@ function App() {
         console.log('=== DETAILED PRICE DATA ANALYSIS ===')
         console.log('First 3 price entries:', priceData.slice(0, 3))
         
-        // Update cards with price information based on the successful approach
+        // CRITICAL FIX: Try multiple ID matching strategies
         const updatedCards = cards.map(card => {
           let cardPrice = null
           
           if (successfulApproach === 1 || successfulApproach === 2) {
-            // card_prices table approach
+            // Strategy 1: Exact match
             cardPrice = priceData.find(price => price.card_id === card.id)
+            
+            // Strategy 2: String conversion match
+            if (!cardPrice) {
+              cardPrice = priceData.find(price => 
+                price.card_id && card.id && 
+                price.card_id.toString() === card.id.toString()
+              )
+            }
+            
+            // Strategy 3: Partial ID match (first 8 characters)
+            if (!cardPrice) {
+              cardPrice = priceData.find(price => 
+                price.card_id && card.id && 
+                price.card_id.toString().substring(0, 8) === card.id.substring(0, 8)
+              )
+            }
+            
+            // Strategy 4: Check if card_id is a number and card.id is UUID
+            if (!cardPrice) {
+              cardPrice = priceData.find(price => 
+                typeof price.card_id === 'number' && 
+                card.id && 
+                price.card_id.toString() === card.id.replace(/-/g, '').substring(0, 8)
+              )
+            }
+            
             console.log(`Card ${card.name} (${card.id}):`, cardPrice) // Debug each card
             
             // Enhanced debugging for price mapping
@@ -145,15 +171,12 @@ function App() {
               })
             } else {
               console.log(`❌ No price data found for ${card.name} (${card.id})`)
-              // Try to find any price entry with similar ID
-              const similarPrice = priceData.find(price => 
-                price.card_id && card.id && 
-                (price.card_id.toString().includes(card.id.substring(0, 8)) || 
-                 card.id.includes(price.card_id.toString().substring(0, 8)))
-              )
-              if (similarPrice) {
-                console.log(`🔍 Found similar price entry:`, similarPrice)
-              }
+              // Show all available price entries for debugging
+              console.log('Available price entries:', priceData.map(p => ({ 
+                card_id: p.card_id, 
+                card_id_type: typeof p.card_id,
+                latest_average: p.latest_average 
+              })))
             }
             
             return {
