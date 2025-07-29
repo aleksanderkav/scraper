@@ -1,0 +1,8 @@
+# Run scheduled scraper every 6 hours
+0 */6 * * * cd /app && python scheduled_scraper.py >> /var/log/scheduled_scraper.log 2>&1
+
+# Run scheduled scraper daily at 2 AM
+0 2 * * * cd /app && python scheduled_scraper.py >> /var/log/scheduled_scraper.log 2>&1
+
+# Run scheduled scraper every hour during business hours (9 AM - 6 PM)
+0 9-18 * * 1-5 cd /app && python scheduled_scraper.py >> /var/log/scheduled_scraper.log 2>&1 
