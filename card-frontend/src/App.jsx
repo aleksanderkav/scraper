@@ -9,10 +9,10 @@ function App() {
   const [deployTime] = useState(() => new Date().toLocaleString())
   
   // Version tracking - prominently displayed
-  const APP_VERSION = '3.3.0'
+  const APP_VERSION = '3.4.0'
   // Static build date - only changes when we actually deploy
-  const BUILD_DATE = '29/07/2025, 14:20:00'
-  const DEPLOY_TIME = '29/07/2025, 14:20:00'
+  const BUILD_DATE = '29/07/2025, 14:25:00'
+  const DEPLOY_TIME = '29/07/2025, 14:25:00'
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -25,7 +25,7 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES (v3.3.0) ===')
+      console.log('=== FETCHING CARDS WITH PRICES (v3.4.0) ===')
       
       // Using the new cards_with_prices view as single source of truth
       const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
@@ -202,8 +202,8 @@ function App() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0">
               <span className="text-xl sm:text-2xl font-bold">🎴 Trading Card Tracker</span>
-              <span className="text-base sm:text-lg font-bold bg-white/30 px-3 py-2 rounded-full border-2 border-white/50 shadow-lg">
-                v{APP_VERSION}
+              <span className="text-base sm:text-lg font-bold bg-white/30 px-3 py-2 rounded-full border-2 border-white/50 shadow-lg animate-pulse">
+                🚀 v{APP_VERSION} 🚀
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm sm:text-base">
