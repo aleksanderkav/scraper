@@ -121,6 +121,7 @@ function App() {
       if (priceData && successfulApproach) {
         console.log(`✅ Using approach ${successfulApproach} with ${priceData.length} price entries`)
         console.log('Sample price data:', priceData[0]) // Debug the structure
+        console.log('Price data keys:', Object.keys(priceData[0] || {}))
         
         // Update cards with price information based on the successful approach
         const updatedCards = cards.map(card => {
@@ -130,6 +131,20 @@ function App() {
             // card_prices table approach
             cardPrice = priceData.find(price => price.card_id === card.id)
             console.log(`Card ${card.name} (${card.id}):`, cardPrice) // Debug each card
+            
+            // Enhanced debugging for price mapping
+            if (cardPrice) {
+              console.log(`✅ Found price data for ${card.name}:`, {
+                card_id: cardPrice.card_id,
+                latest_average: cardPrice.latest_average,
+                price_count: cardPrice.price_count,
+                last_updated: cardPrice.last_updated,
+                all_keys: Object.keys(cardPrice)
+              })
+            } else {
+              console.log(`❌ No price data found for ${card.name} (${card.id})`)
+            }
+            
             return {
               ...card,
               latest_price: cardPrice?.latest_average || null,
@@ -156,6 +171,15 @@ function App() {
           latest_price: c.latest_price, 
           price_count: c.price_count 
         })))
+        
+        // Check if any cards actually got prices
+        const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
+        console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
+        
+        if (cardsWithPrices.length === 0) {
+          console.log('⚠️ WARNING: No cards received price data despite successful fetch')
+          console.log('This suggests a mapping issue between card IDs and price data')
+        }
         
         setCards(updatedCards)
         console.log('✅ Cards updated with price data')
