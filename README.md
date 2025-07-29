@@ -1,150 +1,53 @@
-# FastAPI Web Scraper
+# Supabase Edge Function - Card Scraper
 
-A simple FastAPI application that provides a web scraping API endpoint. This project is ready for deployment to Railway.
+A Supabase Edge Function that scrapes card prices and stores them in the database.
 
-## Features
+## Function: `card-scraper`
 
-- FastAPI web server
-- `/scrape` endpoint that accepts a `query` parameter
-- Mock scraping functionality (easily replaceable with real scraping logic)
-- Docker support for containerized deployment
-- Railway-ready configuration
+This edge function:
+1. Accepts POST requests with a card query
+2. Calls an external scraper API to get price data
+3. Stores the data in Supabase tables (cards, price_entries, card_prices)
 
-## Local Development
-
-### Prerequisites
-
-- Python 3.10 or higher
-- pip
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone <your-repo-url>
-cd fastapi-scraper
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the development server:
-```bash
-python server.py
-```
-
-Or using uvicorn directly:
-```bash
-uvicorn server:app --reload
-```
-
-4. Open your browser and navigate to `http://localhost:8000`
-
-### API Endpoints
-
-- `GET /` - Health check endpoint
-- `GET /docs` - Interactive API documentation (Swagger UI)
-- `GET /scrape?query=<your-query>` - Scrape data based on query
-
-### Example Usage
+### Usage
 
 ```bash
-curl "http://localhost:8000/scrape?query=laptop"
+curl -X POST https://your-project.supabase.co/functions/v1/card-scraper \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ANON_KEY" \
+  -d '{"query": "Pikachu PSA 10"}'
 ```
 
-Response:
+### Response
+
 ```json
 {
-  "query": "laptop",
-  "prices": [150.0, 162.5, 175.0],
-  "average": 162.5,
-  "timestamp": "2024-01-01T00:00:00Z"
+  "status": "success",
+  "message": "Data processed successfully",
+  "data": {
+    "cardInserted": true,
+    "priceEntriesInserted": 3,
+    "cardPriceUpdated": true
+  }
 }
 ```
 
-## Docker
+### Database Schema
 
-### Build and Run
+The function works with these tables:
 
-```bash
-# Build the Docker image
-docker build -t fastapi-scraper .
-
-# Run the container
-docker run -p 8000:8000 fastapi-scraper
-```
-
-## Deployment to Railway
-
-### Method 1: GitHub Integration (Recommended)
-
-1. Push your code to GitHub
-2. Go to [Railway](https://railway.app/)
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Select your repository
-5. Railway will automatically detect the Dockerfile and deploy your application
-
-### Method 2: Direct Deployment
-
-1. Install Railway CLI:
-```bash
-npm install -g @railway/cli
-```
-
-2. Login to Railway:
-```bash
-railway login
-```
-
-3. Initialize and deploy:
-```bash
-railway init
-railway up
-```
+- **cards**: `{ id (UUID, PK), name (TEXT) }`
+- **price_entries**: `{ id (UUID), card_id (UUID), price (NUMERIC), timestamp (TIMESTAMP) }`
+- **card_prices**: `{ id (UUID), card_id (UUID), average_price (NUMERIC), last_seen (TIMESTAMP) }`
 
 ### Environment Variables
 
-No environment variables are required for basic functionality, but you can add them in Railway's dashboard if needed for your specific use case.
+Set these in your Supabase project:
+- `SUPABASE_URL`: Your Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
 
-## Customization
+### Deployment
 
-### Adding Real Scraping Logic
-
-Replace the mock implementation in `scraper.py` with your actual scraping logic:
-
-```python
-import requests
-from bs4 import BeautifulSoup
-
-def run_scraper(query: str) -> dict:
-    # Your actual scraping logic here
-    # Example: scrape prices from an e-commerce site
-    pass
-```
-
-### Adding More Endpoints
-
-Add new endpoints in `server.py`:
-
-```python
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
-```
-
-## Project Structure
-
-```
-fastapi-scraper/
-├── server.py          # Main FastAPI application
-├── scraper.py         # Scraping logic
-├── requirements.txt   # Python dependencies
-├── Dockerfile         # Docker configuration
-└── README.md         # This file
-```
-
-## License
-
-MIT License - feel free to use this project as a starting point for your own applications.
+1. Connect this repository to your Supabase project
+2. Push changes to trigger automatic deployment
+3. Or use Supabase CLI: `supabase functions deploy card-scraper`
