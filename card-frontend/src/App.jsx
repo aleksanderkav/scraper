@@ -498,6 +498,23 @@ function App() {
                         keys: Object.keys(item),
                         values: Object.values(item)
                       })))
+                      
+                      // Also check the first card to see the ID format
+                      const firstCardResponse = await fetch(`${supabaseUrl}/rest/v1/cards?select=*&limit=1`, {
+                        headers: {
+                          'apikey': supabaseAnonKey,
+                          'Authorization': `Bearer ${supabaseAnonKey}`,
+                          'Content-Type': 'application/json'
+                        }
+                      })
+                      if (firstCardResponse.ok) {
+                        const cardData = await firstCardResponse.json()
+                        console.log('First card data:', cardData[0])
+                        console.log('ID comparison:')
+                        console.log('- Card ID:', cardData[0]?.id, 'Type:', typeof cardData[0]?.id)
+                        console.log('- Price card_id:', data[0]?.card_id, 'Type:', typeof data[0]?.card_id)
+                        console.log('- Match test:', cardData[0]?.id === data[0]?.card_id)
+                      }
                     }
                   } catch (error) {
                     console.error('Error checking price data:', error)
