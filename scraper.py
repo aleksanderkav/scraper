@@ -51,7 +51,7 @@ async def scrape_ebay_prices(query: str) -> List[float]:
     
     return prices
 
-def run_scraper(query: str) -> Dict[str, Any]:
+async def run_scraper(query: str) -> Dict[str, Any]:
     """
     Scrape eBay for completed/sold listings and return price data.
     
@@ -62,7 +62,7 @@ def run_scraper(query: str) -> Dict[str, Any]:
         dict: Scraped data with prices and average
     """
     # Run the async scraping function
-    prices = asyncio.run(scrape_ebay_prices(query))
+    prices = await scrape_ebay_prices(query)
     
     # Calculate average if we have prices
     average = sum(prices) / len(prices) if prices else 0.0
@@ -73,3 +73,19 @@ def run_scraper(query: str) -> Dict[str, Any]:
         "average": round(average, 2),
         "timestamp": datetime.utcnow().isoformat() + "Z"
     }
+
+if __name__ == "__main__":
+    """
+    Command-line testing section.
+    Run with: python scraper.py
+    """
+    import sys
+    
+    # You can modify this query for testing
+    test_query = "iphone 15" if len(sys.argv) == 1 else " ".join(sys.argv[1:])
+    
+    print(f"Testing scraper with query: {test_query}")
+    result = asyncio.run(run_scraper(test_query))
+    
+    print(f"Results: {result}")
+    print(f"Found {len(result['prices'])} prices with average: ${result['average']}")

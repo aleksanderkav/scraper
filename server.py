@@ -20,7 +20,7 @@ async def scrape_endpoint(query: str):
         dict: Scraped data including prices and average
     """
     try:
-        result = run_scraper(query)
+        result = await run_scraper(query)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Scraping failed: {str(e)}")
