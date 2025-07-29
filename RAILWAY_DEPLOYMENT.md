@@ -70,6 +70,18 @@ CREATE TABLE card_prices (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create the cards_with_prices view for easy frontend querying
+CREATE VIEW cards_with_prices AS
+SELECT 
+    c.id,
+    c.name,
+    c.created_at,
+    COALESCE(cp.latest_average, 0) as latest_price,
+    cp.last_updated as last_price_update,
+    COALESCE(cp.price_count, 1) as price_count
+FROM cards c
+LEFT JOIN card_prices cp ON c.id = cp.card_id;
+
 -- Create indexes for better performance
 CREATE INDEX idx_price_entries_card_id ON price_entries(card_id);
 CREATE INDEX idx_price_entries_scraped_at ON price_entries(scraped_at);
