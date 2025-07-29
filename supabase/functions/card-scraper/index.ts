@@ -66,12 +66,12 @@ serve(async (req) => {
       )
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    // Initialize Supabase client using built-in context
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || 'https://jvkxyjycpomtzfngocge.supabase.co'
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase environment variables')
+    if (!supabaseServiceKey) {
+      throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)

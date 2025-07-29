@@ -12,7 +12,7 @@ This edge function:
 ### Usage
 
 ```bash
-curl -X POST https://your-project.supabase.co/functions/v1/card-scraper \
+curl -X POST https://jvkxyjycpomtzfngocge.supabase.co/functions/v1/card-scraper \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ANON_KEY" \
   -d '{"query": "Pikachu PSA 10"}'
