@@ -7,6 +7,10 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [libraryLoading, setLibraryLoading] = useState(true)
   const [deployTime] = useState(() => new Date().toLocaleString())
+  
+  // Version tracking
+  const APP_VERSION = '2.1.0'
+  const BUILD_DATE = new Date().toLocaleString()
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -161,6 +165,21 @@ function App() {
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed font-medium">
             Track and analyze trading card prices from eBay and other marketplaces
           </p>
+          
+          {/* Version Info */}
+          <div className="mt-6 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-white/40 dark:border-gray-700/40 inline-block">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-blue-600 dark:text-blue-400">v{APP_VERSION}</span>
+                <span className="text-gray-400">•</span>
+                <span>Built: {BUILD_DATE}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400">•</span>
+                <span>Deployed: {deployTime}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Search Form */}
@@ -298,81 +317,39 @@ function App() {
                 🔍 Check DB
               </button>
               <button
-                onClick={() => fetchPriceData(cards)}
-                className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 hover:from-orange-600 hover:via-red-600 hover:to-red-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
-              >
-                💰 Test Prices
-              </button>
-              <button
                 onClick={async () => {
-                  console.log('=== DIRECT PRICE DATA CHECK ===')
+                  console.log('=== TESTING CARDS_WITH_PRICES VIEW ===')
                   try {
-                    const response = await fetch(`${supabaseUrl}/rest/v1/card_prices?select=*&limit=3`, {
+                    const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=3`, {
                       headers: {
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${supabaseAnonKey}`,
                         'Content-Type': 'application/json'
                       }
                     })
+                    
+                    console.log(`Response status: ${response.status}`)
                     if (response.ok) {
                       const data = await response.json()
-                      console.log('Direct price data sample:', data)
-                      console.log('Price data structure:', data.map(item => ({
-                        keys: Object.keys(item),
-                        values: Object.values(item)
-                      })))
-                      
-                      // Also check the first card to see the ID format
-                      const firstCardResponse = await fetch(`${supabaseUrl}/rest/v1/cards?select=*&limit=1`, {
-                        headers: {
-                          'apikey': supabaseAnonKey,
-                          'Authorization': `Bearer ${supabaseAnonKey}`,
-                          'Content-Type': 'application/json'
-                        }
+                      console.log(`✅ View test result:`, data)
+                      console.log(`✅ Sample card:`, data[0])
+                      console.log(`✅ Price fields:`, {
+                        latest_price: data[0]?.latest_price,
+                        price_count: data[0]?.price_count,
+                        last_price_update: data[0]?.last_price_update
                       })
-                      if (firstCardResponse.ok) {
-                        const cardData = await firstCardResponse.json()
-                        console.log('First card data:', cardData[0])
-                        console.log('ID comparison:')
-                        console.log('- Card ID:', cardData[0]?.id, 'Type:', typeof cardData[0]?.id)
-                        console.log('- Price card_id:', data[0]?.card_id, 'Type:', typeof data[0]?.card_id)
-                        console.log('- Match test:', cardData[0]?.id === data[0]?.card_id)
-                        
-                        // CRITICAL: Test the actual mapping logic
-                        console.log('=== MAPPING TEST ===')
-                        const testCard = cardData[0]
-                        const testPrice = data[0]
-                        
-                        // Test all matching strategies
-                        console.log('Strategy 1 - Direct match:', testCard?.id === testPrice?.card_id)
-                        console.log('Strategy 2 - String match:', testCard?.id?.toString() === testPrice?.card_id?.toString())
-                        console.log('Strategy 3 - UUID without dashes:', testCard?.id?.replace(/-/g, '') === testPrice?.card_id?.toString())
-                        console.log('Strategy 4 - First 8 chars:', testCard?.id?.substring(0, 8) === testPrice?.card_id?.toString().substring(0, 8))
-                        
-                        // Show what the card would look like after mapping
-                        const mappedCard = {
-                          ...testCard,
-                          latest_price: testPrice?.latest_average || null,
-                          price_count: testPrice?.price_count || 0,
-                          last_price_update: testPrice?.last_updated || null
-                        }
-                        console.log('Mapped card result:', {
-                          name: mappedCard.name,
-                          latest_price: mappedCard.latest_price,
-                          price_count: mappedCard.price_count,
-                          last_price_update: mappedCard.last_price_update
-                        })
-                        console.log('=== END MAPPING TEST ===')
-                      }
+                    } else {
+                      const errorText = await response.text()
+                      console.log(`❌ View test failed:`, errorText)
                     }
                   } catch (error) {
-                    console.error('Error checking price data:', error)
+                    console.error('❌ View test error:', error)
                   }
-                  console.log('=== END DIRECT PRICE DATA CHECK ===')
+                  console.log('=== END VIEW TEST ===')
                 }}
                 className="bg-gradient-to-r from-purple-500 via-purple-600 to-pink-600 hover:from-purple-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
-                🔍 Check Price Data
+                🔍 Test View
               </button>
             </div>
           </div>
