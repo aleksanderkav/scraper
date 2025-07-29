@@ -73,8 +73,8 @@ function App() {
       console.log('=== FETCHING PRICE DATA ===')
       console.log('Cards to match with prices:', cards.map(c => ({ id: c.id, name: c.name })))
       
-      // OPTION B: Use Supabase join query for better performance and reliability
-      const joinUrl = `${supabaseUrl}/rest/v1/cards?select=*,card_prices(latest_average,price_count,last_updated)&order=created_at.desc`
+             // OPTION B: Use Supabase join query for better performance and reliability
+       const joinUrl = `${supabaseUrl}/rest/v1/cards?select=*,card_prices(average_price,last_seen)&order=created_at.desc`
       
       const headers = {
         'apikey': supabaseAnonKey,
@@ -93,24 +93,23 @@ function App() {
           console.log('✅ Join query successful with', joinedData.length, 'cards')
           console.log('Sample joined data:', joinedData[0])
           
-          // Process the joined data
-          const updatedCards = joinedData.map(card => {
-            const priceData = card.card_prices?.[0] // Get first price entry
-            console.log(`Card ${card.name} (${card.id}):`, {
-              hasPriceData: !!priceData,
-              priceData: priceData,
-              latest_average: priceData?.latest_average,
-              price_count: priceData?.price_count,
-              last_updated: priceData?.last_updated
-            })
-            
-            return {
-              ...card,
-              latest_price: priceData?.latest_average || null,
-              price_count: priceData?.price_count || 0,
-              last_price_update: priceData?.last_updated || null
-            }
-          })
+                     // Process the joined data
+           const updatedCards = joinedData.map(card => {
+             const priceData = card.card_prices?.[0] // Get first price entry
+             console.log(`Card ${card.name} (${card.id}):`, {
+               hasPriceData: !!priceData,
+               priceData: priceData,
+               average_price: priceData?.average_price,
+               last_seen: priceData?.last_seen
+             })
+             
+             return {
+               ...card,
+               latest_price: priceData?.average_price || null,
+               price_count: 1, // Set to 1 since we're not using price_entries yet
+               last_price_update: priceData?.last_seen || null
+             }
+           })
           
           console.log('Updated cards with prices:', updatedCards.map(c => ({ 
             name: c.name, 
@@ -122,6 +121,19 @@ function App() {
           // Check if any cards actually got prices
           const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
           console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
+          
+          // Log one of the cardsWithPrices objects to verify structure
+          if (cardsWithPrices.length > 0) {
+            console.log('=== VERIFICATION: Sample card with prices ===')
+            console.log('Sample card object:', {
+              name: cardsWithPrices[0].name,
+              latest_price: cardsWithPrices[0].latest_price,
+              last_price_update: cardsWithPrices[0].last_price_update,
+              price_count: cardsWithPrices[0].price_count,
+              id: cardsWithPrices[0].id
+            })
+            console.log('=== END VERIFICATION ===')
+          }
           
           if (cardsWithPrices.length === 0) {
             console.log('⚠️ WARNING: No cards received price data from join query')
@@ -192,16 +204,15 @@ function App() {
           console.log(`Card ${card.name} (${cardId}):`, {
             found: !!priceData,
             priceData: priceData,
-            latest_average: priceData?.latest_average,
-            price_count: priceData?.price_count,
-            last_updated: priceData?.last_updated
+            average_price: priceData?.average_price,
+            last_seen: priceData?.last_seen
           })
           
           return {
             ...card,
-            latest_price: priceData?.latest_average || null,
-            price_count: priceData?.price_count || 0,
-            last_price_update: priceData?.last_updated || null
+            latest_price: priceData?.average_price || null,
+            price_count: 1, // Set to 1 since we're not using price_entries yet
+            last_price_update: priceData?.last_seen || null
           }
         })
         
@@ -226,7 +237,8 @@ function App() {
           console.log('First 3 price entries:', Array.from(priceMap.entries()).slice(0, 3).map(([key, value]) => ({ 
             card_id: key, 
             card_id_type: typeof key,
-            latest_average: value.latest_average,
+            average_price: value.average_price,
+            last_seen: value.last_seen,
             all_keys: Object.keys(value)
           })))
           
@@ -256,9 +268,9 @@ function App() {
           // Show what the mapping would produce
           const mappedCard = {
             ...testCard,
-            latest_price: testPrice?.latest_average || null,
-            price_count: testPrice?.price_count || 0,
-            last_price_update: testPrice?.last_updated || null
+            latest_price: testPrice?.average_price || null,
+            price_count: 1, // Set to 1 since we're not using price_entries yet
+            last_price_update: testPrice?.last_seen || null
           }
           console.log('Mapped card result:', {
             name: mappedCard.name,
