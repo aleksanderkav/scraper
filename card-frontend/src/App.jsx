@@ -274,14 +274,73 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative pb-12">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Card Scraper
+        {/* Main Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-4">
+            Trading Card Price Tracker
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Search and collect trading card data
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+            Track and analyze trading card prices from eBay and other marketplaces
           </p>
+        </div>
+
+        {/* Feature Cards Grid */}
+        <div className="max-w-7xl mx-auto mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Price Charts Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-start mb-6">
+                <div className="text-4xl mr-4">📈</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Price Charts
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                    View historical price trends for your favorite cards with interactive charts and analytics
+                  </p>
+                </div>
+              </div>
+              <button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105">
+                Coming Soon
+              </button>
+            </div>
+
+            {/* Card Browser Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-start mb-6">
+                <div className="text-4xl mr-4">🧩</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Card Browser
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                    Browse and search through your collected card database with advanced filtering options
+                  </p>
+                </div>
+              </div>
+              <button className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105">
+                Open Dashboard
+              </button>
+            </div>
+
+            {/* Admin Dashboard Card */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8 hover:shadow-xl hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-start mb-6">
+                <div className="text-4xl mr-4">⚙️</div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    Admin Dashboard
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                    Manage your card collection, configure scraping settings, and view system analytics
+                  </p>
+                </div>
+              </div>
+              <button className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105">
+                Coming Soon
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Search Form */}
