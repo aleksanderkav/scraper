@@ -122,6 +122,18 @@ function App() {
           const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
           console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
           
+          // CRITICAL DEBUGGING: Check why cardsWithPrices might be empty
+          console.log('=== CRITICAL DEBUGGING: Why no prices? ===')
+          console.log('All updated cards:', updatedCards.map(c => ({
+            name: c.name,
+            latest_price: c.latest_price,
+            latest_price_type: typeof c.latest_price,
+            latest_price_truthy: !!c.latest_price,
+            latest_price_gt_zero: c.latest_price > 0,
+            price_count: c.price_count,
+            last_price_update: c.last_price_update
+          })))
+          
           // Log one of the cardsWithPrices objects to verify structure
           if (cardsWithPrices.length > 0) {
             console.log('=== VERIFICATION: Sample card with prices ===')
@@ -133,7 +145,12 @@ function App() {
               id: cardsWithPrices[0].id
             })
             console.log('=== END VERIFICATION ===')
+          } else {
+            console.log('⚠️ NO CARDS WITH PRICES FOUND!')
+            console.log('This means all cards have latest_price as null, 0, or falsy')
+            console.log('Check the "All updated cards" log above to see the actual values')
           }
+          console.log('=== END CRITICAL DEBUGGING ===')
           
           if (cardsWithPrices.length === 0) {
             console.log('⚠️ WARNING: No cards received price data from join query')
@@ -304,6 +321,18 @@ function App() {
         // Check if any cards actually got prices
         const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
         console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
+        
+        // CRITICAL DEBUGGING: Check why cardsWithPrices might be empty in fallback
+        console.log('=== FALLBACK DEBUGGING: Why no prices? ===')
+        console.log('All fallback cards:', updatedCards.map(c => ({
+          name: c.name,
+          latest_price: c.latest_price,
+          latest_price_type: typeof c.latest_price,
+          latest_price_truthy: !!c.latest_price,
+          latest_price_gt_zero: c.latest_price > 0,
+          price_count: c.price_count,
+          last_price_update: c.last_price_update
+        })))
         
         if (cardsWithPrices.length === 0) {
           console.log('⚠️ WARNING: No cards received price data despite successful fetch')
