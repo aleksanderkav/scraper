@@ -19,11 +19,10 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES (v2) ===')
+      console.log('=== FETCHING CARDS WITH PRICES ===')
       
-      // Try the new cards_with_prices view first, fallback to manual mapping
-      let apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
-      console.log('Full API URL:', apiUrl)
+      const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
+      console.log('API URL:', apiUrl)
       
       const headers = {
         'apikey': supabaseAnonKey,
@@ -36,158 +35,48 @@ function App() {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.log('❌ Cards with prices view not available, falling back to manual mapping')
-        console.log('Error:', errorText)
-        
-        // Fallback to manual mapping approach
-        return await fetchCardsWithManualMapping()
+        console.error('❌ Failed to fetch cards with prices:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const cardsWithPrices = await response.json()
-      console.log('✅ Raw API response:', cardsWithPrices)
-      console.log('✅ Number of cards:', cardsWithPrices.length)
+      console.log('✅ Fetched', cardsWithPrices.length, 'cards with prices')
       
       if (Array.isArray(cardsWithPrices)) {
-        // Log sample card structure to verify fields
+        // Log sample card structure
         if (cardsWithPrices.length > 0) {
-          console.log('=== SAMPLE CARD STRUCTURE ===')
-          console.log('Sample card:', {
+          console.log('=== SAMPLE CARD ===')
+          console.log('Sample:', {
             name: cardsWithPrices[0].name,
             latest_price: cardsWithPrices[0].latest_price,
-            last_price_update: cardsWithPrices[0].last_price_update,
             price_count: cardsWithPrices[0].price_count,
-            id: cardsWithPrices[0].id
+            last_price_update: cardsWithPrices[0].last_price_update
           })
-          console.log('=== END SAMPLE CARD STRUCTURE ===')
+          console.log('=== END SAMPLE ===')
         }
         
         setCards(cardsWithPrices)
-        console.log('✅ Cards state updated with', cardsWithPrices.length, 'cards')
+        console.log('✅ Cards updated successfully')
       } else {
         console.error('❌ Response is not an array:', typeof cardsWithPrices)
         setCards([])
       }
     } catch (error) {
-      console.error('❌ Error fetching cards with prices:', error)
-      console.error('❌ Error details:', error.message)
+      console.error('❌ Error fetching cards:', error)
       setSearchStatus('Error loading card library')
     } finally {
       setLibraryLoading(false)
-      console.log('=== END FETCHING CARDS WITH PRICES (v2) ===')
+      console.log('=== END FETCHING CARDS ===')
     }
   }
 
-  // Fallback function for when cards_with_prices view is not available
-  const fetchCardsWithManualMapping = async () => {
-    try {
-      console.log('=== FALLBACK: MANUAL MAPPING ===')
-      
-      // Fetch cards
-      const cardsUrl = `${supabaseUrl}/rest/v1/cards?select=*&order=created_at.desc`
-      const cardsResponse = await fetch(cardsUrl, { headers })
-      
-      if (!cardsResponse.ok) {
-        throw new Error(`Cards fetch failed: ${cardsResponse.status}`)
-      }
-      
-      const cards = await cardsResponse.json()
-      console.log('✅ Fetched', cards.length, 'cards')
-      
-      // Fetch price data
-      const pricesUrl = `${supabaseUrl}/rest/v1/card_prices?select=*`
-      const pricesResponse = await fetch(pricesUrl, { headers })
-      
-      if (!pricesResponse.ok) {
-        throw new Error(`Prices fetch failed: ${pricesResponse.status}`)
-      }
-      
-      const prices = await pricesResponse.json()
-      console.log('✅ Fetched', prices.length, 'price entries')
-      
-      // Create price map for efficient lookup
-      const priceMap = new Map()
-      prices.forEach(price => {
-        if (price.card_id) {
-          priceMap.set(price.card_id.toString(), price)
-        }
-      })
-      
-      // Map cards with prices
-      const cardsWithPrices = cards.map(card => {
-        const cardId = card.id?.toString()
-        const priceData = priceMap.get(cardId)
-        
-        return {
-          ...card,
-          latest_price: priceData?.average_price || null,
-          last_price_update: priceData?.last_seen || null,
-          price_count: priceData ? 1 : 0
-        }
-      })
-      
-      // Log sample structure
-      if (cardsWithPrices.length > 0) {
-        console.log('=== SAMPLE CARD STRUCTURE (FALLBACK) ===')
-        console.log('Sample card:', {
-          name: cardsWithPrices[0].name,
-          latest_price: cardsWithPrices[0].latest_price,
-          last_price_update: cardsWithPrices[0].last_price_update,
-          price_count: cardsWithPrices[0].price_count,
-          id: cardsWithPrices[0].id
-        })
-        console.log('=== END SAMPLE CARD STRUCTURE ===')
-      }
-      
-      setCards(cardsWithPrices)
-      console.log('✅ Cards updated with manual mapping')
-      
-    } catch (error) {
-      console.error('❌ Fallback mapping error:', error)
-      setSearchStatus('Error loading card library')
-    } finally {
-      console.log('=== END FALLBACK: MANUAL MAPPING ===')
-    }
-  }
+  // Removed old fallback logic - no longer needed with cards_with_prices view
 
   const checkDatabaseDirectly = async () => {
     try {
-      console.log('=== DIRECT DATABASE CHECK ===')
+      console.log('=== TESTING CARDS_WITH_PRICES VIEW ===')
       
-      // Method 1: Try different query approaches
-      const queries = [
-        { name: 'All cards', url: `${supabaseUrl}/rest/v1/cards?select=*` },
-        { name: 'Cards with limit', url: `${supabaseUrl}/rest/v1/cards?select=*&limit=10` },
-        { name: 'Cards ordered by created_at', url: `${supabaseUrl}/rest/v1/cards?select=*&order=created_at.desc` },
-        { name: 'Cards with specific columns', url: `${supabaseUrl}/rest/v1/cards?select=id,name,created_at` },
-        { name: 'Count cards', url: `${supabaseUrl}/rest/v1/cards?select=count` }
-      ]
-      
-      for (const query of queries) {
-        console.log(`\n--- Testing: ${query.name} ---`)
-        const response = await fetch(query.url, {
-          headers: {
-            'apikey': supabaseAnonKey,
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Content-Type': 'application/json'
-          }
-        })
-        
-        console.log(`Response status: ${response.status}`)
-        if (response.ok) {
-          const data = await response.json()
-          console.log(`✅ ${query.name} result:`, data)
-          console.log(`✅ Data type:`, typeof data)
-          console.log(`✅ Data length:`, Array.isArray(data) ? data.length : 'N/A')
-        } else {
-          const errorText = await response.text()
-          console.log(`❌ ${query.name} failed:`, errorText)
-        }
-      }
-      
-      // Method 2: Try to check if the table exists and has data
-      console.log('\n--- Checking table structure ---')
-      const tableCheckUrl = `${supabaseUrl}/rest/v1/cards?select=*&limit=1`
-      const tableResponse = await fetch(tableCheckUrl, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=3`, {
         headers: {
           'apikey': supabaseAnonKey,
           'Authorization': `Bearer ${supabaseAnonKey}`,
@@ -195,20 +84,20 @@ function App() {
         }
       })
       
-      console.log('Table check response status:', tableResponse.status)
-      if (tableResponse.ok) {
-        const tableData = await tableResponse.json()
-        console.log('✅ Table structure check:', tableData)
-        console.log('✅ Table exists and is accessible')
+      console.log(`Response status: ${response.status}`)
+      if (response.ok) {
+        const data = await response.json()
+        console.log(`✅ View test result:`, data)
+        console.log(`✅ Sample card:`, data[0])
       } else {
-        const tableError = await tableResponse.text()
-        console.log('❌ Table structure check failed:', tableError)
+        const errorText = await response.text()
+        console.log(`❌ View test failed:`, errorText)
       }
       
     } catch (error) {
-      console.error('❌ Direct database check error:', error)
+      console.error('❌ View test error:', error)
     } finally {
-      console.log('=== END DIRECT DATABASE CHECK ===')
+      console.log('=== END VIEW TEST ===')
     }
   }
 
@@ -542,23 +431,40 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
+                          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 rounded-2xl p-5 border-2 border-orange-200 dark:border-orange-800 shadow-lg">
                             <div className="text-center">
-                              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full mb-3">
-                                <span className="text-blue-600 dark:text-blue-400 text-lg">⏳</span>
+                              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-full mb-3">
+                                <span className="text-orange-600 dark:text-orange-400 text-lg">💰</span>
                               </div>
-                              <p className="text-base text-blue-800 dark:text-blue-200 font-bold">
-                                Price data will be updated soon
+                              <p className="text-base text-orange-800 dark:text-orange-200 font-bold mb-3">
+                                No Price Data Available
                               </p>
-                              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                                Card Added Successfully
-                              </p>
-                              {/* Debug info */}
-                              <div className="mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs">
-                                <p>Debug: latest_price = {card.latest_price}</p>
-                                <p>Debug: price_count = {card.price_count}</p>
-                                <p>Debug: last_price_update = {card.last_price_update}</p>
-                              </div>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const scraperUrl = `https://scraper-production-22f6.up.railway.app/scrape?query=${encodeURIComponent(card.name)}`
+                                    console.log('Scraping prices for:', card.name)
+                                    console.log('Scraper URL:', scraperUrl)
+                                    
+                                    const response = await fetch(scraperUrl)
+                                    const result = await response.json()
+                                    
+                                    console.log('Scraper result:', result)
+                                    
+                                    if (result.status === 'success') {
+                                      // Refresh the card library to show updated prices
+                                      setTimeout(() => {
+                                        fetchCards()
+                                      }, 2000)
+                                    }
+                                  } catch (error) {
+                                    console.error('Error scraping prices:', error)
+                                  }
+                                }}
+                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+                              >
+                                🚀 Scrape Prices
+                              </button>
                             </div>
                           </div>
                         )}
