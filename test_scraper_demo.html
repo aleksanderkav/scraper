@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Card Price Scraper Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .query-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        button {
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .preset-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .preset-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .preset-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .results {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #FFD700;
+        }
+        .price-item {
+            background: rgba(255,255,255,0.1);
+            margin: 5px 0;
+            padding: 8px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        .stats {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .error {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #ff6b6b;
+        }
+        .success {
+            color: #51cf66;
+            background: rgba(81,207,102,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Pokemon Card Price Scraper Demo</h1>
+        
+        <div class="test-section">
+            <h2>🔗 API Endpoint</h2>
+            <p><strong>Live API:</strong> <code>https://scraper-production-22f6.up.railway.app</code></p>
+            <p>Test your Pokemon card price scraper in real-time!</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Test a Card Query</h2>
+            
+            <div class="preset-buttons">
+                <div class="preset-btn" onclick="setQuery('Charizard PSA 10')">Charizard PSA 10</div>
+                <div class="preset-btn" onclick="setQuery('Pikachu PSA 9')">Pikachu PSA 9</div>
+                <div class="preset-btn" onclick="setQuery('Blastoise PSA 10')">Blastoise PSA 10</div>
+                <div class="preset-btn" onclick="setQuery('Mewtwo PSA 10')">Mewtwo PSA 10</div>
+                <div class="preset-btn" onclick="setQuery('Japanese Charizard PSA')">Japanese Charizard</div>
+                <div class="preset-btn" onclick="setQuery('Shadowless Charizard PSA')">Shadowless Charizard</div>
+            </div>
+
+            <div class="query-input">
+                <input type="text" id="queryInput" placeholder="Enter Pokemon card query (e.g., 'Charizard PSA 10')" value="Charizard PSA 10">
+                <button onclick="testQuery()" id="testBtn">🚀 Test Scraper</button>
+            </div>
+
+            <div id="results" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Multiple Card Test</h2>
+            <p>Test multiple popular cards at once to see the system in action:</p>
+            <button onclick="testMultiple()" id="multiBtn">🎲 Test 5 Popular Cards</button>
+            <div id="multiResults" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://scraper-production-22f6.up.railway.app';
+
+        function setQuery(query) {
+            document.getElementById('queryInput').value = query;
+        }
+
+        async function testQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert('Please enter a Pokemon card query!');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            const testBtn = document.getElementById('testBtn');
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">🔄 Scraping eBay for "' + query + '"...<br>This may take 30-60 seconds...</div>';
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Scraping...';
+
+            try {
+                const response = await fetch(`${API_URL}/scrape?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResults(data, resultsDiv);
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Error: ${data.detail || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🚀 Test Scraper';
+            }
+        }
+
+        async function testMultiple() {
+            const queries = [
+                'Charizard PSA 10',
+                'Pikachu PSA 9',
+                'Blastoise PSA 10',
+                'Mewtwo PSA 10',
+                'Lugia PSA 10'
+            ];
+
+            const resultsDiv = document.getElementById('multiResults');
+            const multiBtn = document.getElementById('multiBtn');
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">🔄 Testing ' + queries.length + ' cards...<br>This will take a few minutes...</div>';
+            multiBtn.disabled = true;
+            multiBtn.textContent = '⏳ Testing...';
+
+            let allResults = [];
+            let totalPrices = 0;
+            
+            for (let i = 0; i < queries.length; i++) {
+                const query = queries[i];
+                resultsDiv.innerHTML += `<div class="loading">🎯 [${i+1}/${queries.length}] Testing: ${query}</div>`;
+                
+                try {
+                    const response = await fetch(`${API_URL}/scrape?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        allResults.push(data);
+                        totalPrices += data.prices.length;
+                        resultsDiv.innerHTML += `<div class="success">✅ ${query}: ${data.prices.length} prices, avg $${data.average}</div>`;
+                    } else {
+                        resultsDiv.innerHTML += `<div class="error">❌ ${query}: Failed</div>`;
+                    }
+                } catch (error) {
+                    resultsDiv.innerHTML += `<div class="error">❌ ${query}: ${error.message}</div>`;
+                }
+
+                // Wait between requests
+                if (i < queries.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            }
+
+            // Display summary
+            const summary = `
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${allResults.length}</div>
+                        <div>Cards Scraped</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${totalPrices}</div>
+                        <div>Total Prices</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${(totalPrices / allResults.length).toFixed(1)}</div>
+                        <div>Avg Prices/Card</div>
+                    </div>
+                </div>
+            `;
+            resultsDiv.innerHTML += summary;
+
+            multiBtn.disabled = false;
+            multiBtn.textContent = '🎲 Test 5 Popular Cards';
+        }
+
+        function displayResults(data, container) {
+            const prices = data.prices || [];
+            const priceItems = prices.map(price => `<span class="price-item">$${price}</span>`).join('');
+            
+            const html = `
+                <div class="success">
+                    <h3>✅ Results for "${data.query}"</h3>
+                    <p><strong>Prices Found:</strong> ${prices.length}</p>
+                    ${prices.length > 0 ? `
+                        <p><strong>Individual Prices:</strong><br>${priceItems}</p>
+                        <div class="stats">
+                            <div class="stat-item">
+                                <div class="stat-value">$${data.average}</div>
+                                <div>Average Price</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">$${Math.max(...prices)}</div>
+                                <div>Highest Price</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">$${Math.min(...prices)}</div>
+                                <div>Lowest Price</div>
+                            </div>
+                        </div>
+                    ` : '<p>No prices found for this query.</p>'}
+                    <p><small>Scraped at: ${data.timestamp}</small></p>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testQuery();
+            }
+        });
+    </script>
+</body>
+</html>
