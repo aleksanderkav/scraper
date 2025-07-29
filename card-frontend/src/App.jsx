@@ -535,6 +535,32 @@ function App() {
                         console.log('- Card ID:', cardData[0]?.id, 'Type:', typeof cardData[0]?.id)
                         console.log('- Price card_id:', data[0]?.card_id, 'Type:', typeof data[0]?.card_id)
                         console.log('- Match test:', cardData[0]?.id === data[0]?.card_id)
+                        
+                        // CRITICAL: Test the actual mapping logic
+                        console.log('=== MAPPING TEST ===')
+                        const testCard = cardData[0]
+                        const testPrice = data[0]
+                        
+                        // Test all matching strategies
+                        console.log('Strategy 1 - Direct match:', testCard?.id === testPrice?.card_id)
+                        console.log('Strategy 2 - String match:', testCard?.id?.toString() === testPrice?.card_id?.toString())
+                        console.log('Strategy 3 - UUID without dashes:', testCard?.id?.replace(/-/g, '') === testPrice?.card_id?.toString())
+                        console.log('Strategy 4 - First 8 chars:', testCard?.id?.substring(0, 8) === testPrice?.card_id?.toString().substring(0, 8))
+                        
+                        // Show what the card would look like after mapping
+                        const mappedCard = {
+                          ...testCard,
+                          latest_price: testPrice?.latest_average || null,
+                          price_count: testPrice?.price_count || 0,
+                          last_price_update: testPrice?.last_updated || null
+                        }
+                        console.log('Mapped card result:', {
+                          name: mappedCard.name,
+                          latest_price: mappedCard.latest_price,
+                          price_count: mappedCard.price_count,
+                          last_price_update: mappedCard.last_price_update
+                        })
+                        console.log('=== END MAPPING TEST ===')
                       }
                     }
                   } catch (error) {
