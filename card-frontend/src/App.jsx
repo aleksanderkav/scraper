@@ -20,10 +20,9 @@ function App() {
     try {
       setLibraryLoading(true)
       console.log('=== FETCHING CARDS DEBUG ===')
-      console.log('Supabase URL:', supabaseUrl)
-      console.log('Supabase Anon Key (first 20 chars):', supabaseAnonKey?.substring(0, 20) + '...')
       
-      const apiUrl = `${supabaseUrl}/rest/v1/cards?select=*`
+      // Fetch cards with their latest price data
+      const apiUrl = `${supabaseUrl}/rest/v1/cards?select=*,card_prices(latest_average,price_count,last_updated)&order=created_at.desc`
       console.log('Full API URL:', apiUrl)
       
       const headers = {
@@ -31,11 +30,9 @@ function App() {
         'Authorization': `Bearer ${supabaseAnonKey}`,
         'Content-Type': 'application/json'
       }
-      console.log('Request headers:', headers)
       
       const response = await fetch(apiUrl, { headers })
       console.log('Response status:', response.status)
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -46,11 +43,18 @@ function App() {
       const data = await response.json()
       console.log('✅ Raw API response:', data)
       console.log('✅ Number of cards:', data.length)
-      console.log('✅ Cards array:', data)
       
       if (Array.isArray(data)) {
-        setCards(data)
-        console.log('✅ Cards state updated with', data.length, 'cards')
+        // Process the data to flatten the nested price information
+        const processedCards = data.map(card => ({
+          ...card,
+          latest_price: card.card_prices?.[0]?.latest_average || null,
+          price_count: card.card_prices?.[0]?.price_count || 0,
+          last_price_update: card.card_prices?.[0]?.last_updated || null
+        }))
+        
+        setCards(processedCards)
+        console.log('✅ Cards state updated with', processedCards.length, 'cards')
       } else {
         console.error('❌ Response is not an array:', typeof data)
         setCards([])
@@ -189,42 +193,62 @@ function App() {
 
         {/* Search Form */}
         <div className="max-w-2xl mx-auto mb-12">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-              Search for Cards
-            </h2>
-            <form onSubmit={handleSearch} className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                🔍 Search for Cards
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Enter a card name to scrape current market prices
+              </p>
+            </div>
+            <form onSubmit={handleSearch} className="space-y-6">
               <div>
-                <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Card Name
+                <label htmlFor="search" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Card Name & Condition
                 </label>
                 <input
                   type="text"
                   id="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="e.g., Pikachu PSA 10"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  placeholder="e.g., Pikachu PSA 10, Charizard PSA 9, Blastoise PSA 8"
+                  className="w-full px-6 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-200"
                   required
                 />
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Include the card name and condition (PSA grade) for best results
+                </p>
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition duration-200"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:transform-none text-lg shadow-lg"
               >
-                {loading ? 'Searching...' : 'Search Card'}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Scraping Prices...
+                  </div>
+                ) : (
+                  '🚀 Search & Scrape Prices'
+                )}
               </button>
             </form>
             
             {/* Status Message */}
             {searchStatus && (
-              <div className={`mt-4 p-3 rounded-md ${
+              <div className={`mt-6 p-4 rounded-xl border-2 ${
                 searchStatus.includes('Error') 
-                  ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' 
-                  : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' 
+                  : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
               }`}>
-                {searchStatus}
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">
+                    {searchStatus.includes('Error') ? '❌' : '✅'}
+                  </span>
+                  <span className="font-medium">{searchStatus}</span>
+                </div>
               </div>
             )}
           </div>
@@ -232,18 +256,33 @@ function App() {
 
         {/* Card Library */}
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                Card Library
-              </h2>
-              <div className="flex gap-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-gray-200 dark:border-gray-700">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  📚 Card Library
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Your collection of scraped trading cards with current market prices
+                </p>
+              </div>
+              <div className="flex gap-3">
                 <button
                   onClick={fetchCards}
                   disabled={libraryLoading}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white text-sm rounded-md transition duration-200"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm rounded-lg transition duration-200 flex items-center"
                 >
-                  {libraryLoading ? 'Loading...' : 'Refresh'}
+                  {libraryLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-1">🔄</span>
+                      Refresh
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => {
@@ -256,15 +295,15 @@ function App() {
                     console.log('- VITE_SUPABASE_ANON_KEY (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
                     console.log('=== END DEBUG ===')
                   }}
-                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-md transition duration-200"
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-lg transition duration-200"
                 >
-                  Debug
+                  🐛 Debug
                 </button>
                 <button
                   onClick={checkDatabaseDirectly}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition duration-200"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition duration-200"
                 >
-                  Check DB
+                  🔍 Check DB
                 </button>
               </div>
             </div>
@@ -282,34 +321,83 @@ function App() {
             ) : (
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Found {cards.length} card(s)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {cards.map((card, index) => (
-                  <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {card.name || 'Unknown Card'}
-                    </h3>
-                    {card.price && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Price: {card.price}
-                      </p>
-                    )}
-                    {card.condition && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Condition: {card.condition}
-                      </p>
-                    )}
-                    {card.source && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                        Source: {card.source}
-                      </p>
-                    )}
-                    {card.created_at && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
-                        Added: {new Date(card.created_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {cards.map((card, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 overflow-hidden group">
+                      {/* Card Header */}
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
+                        <h3 className="font-bold text-lg truncate">
+                          {card.name || 'Unknown Card'}
+                        </h3>
+                        <p className="text-blue-100 text-sm opacity-90">
+                          Card #{card.id}
+                        </p>
+                      </div>
+                      
+                      {/* Card Content */}
+                      <div className="p-4 space-y-3">
+                        {/* Price Information */}
+                        {card.latest_price ? (
+                          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-800">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                                Latest Price
+                              </span>
+                              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                                ${card.latest_price.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-xs text-green-600 dark:text-green-400">
+                                {card.price_count} price entries
+                              </span>
+                              {card.last_price_update && (
+                                <span className="text-xs text-green-600 dark:text-green-400">
+                                  Updated: {new Date(card.last_price_update).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                              No price data available
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Card Details */}
+                        <div className="space-y-2">
+                          {card.condition && (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Condition:</span>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">{card.condition}</span>
+                            </div>
+                          )}
+                          
+                          {card.source && (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Source:</span>
+                              <span className="text-sm font-medium text-gray-900 dark:text-white">{card.source}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                            Added: {new Date(card.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
