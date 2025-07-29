@@ -229,7 +229,7 @@ function App() {
               <span className="text-2xl sm:text-3xl">🎴</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight">
-              Trading Card Price Tracker
+              Trading Card Price Tracker v4.0.0
             </h1>
             <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-4xl mx-auto leading-relaxed font-medium px-4">
               Track and analyze trading card prices from eBay and other marketplaces
