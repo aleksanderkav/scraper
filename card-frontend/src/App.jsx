@@ -213,6 +213,27 @@ function App() {
         if (cardsWithPrices.length === 0) {
           console.log('⚠️ WARNING: No cards received price data despite successful fetch')
           console.log('This suggests a mapping issue between card IDs and price data')
+          
+          // CRITICAL DEBUGGING: Show the actual data structures
+          console.log('=== CRITICAL DEBUGGING ===')
+          console.log('First 3 cards:', cards.slice(0, 3).map(c => ({ id: c.id, name: c.name, id_type: typeof c.id })))
+          console.log('First 3 price entries:', priceData.slice(0, 3).map(p => ({ 
+            card_id: p.card_id, 
+            card_id_type: typeof p.card_id,
+            latest_average: p.latest_average,
+            all_keys: Object.keys(p)
+          })))
+          
+          // Test ID matching manually
+          const firstCard = cards[0]
+          const firstPrice = priceData[0]
+          console.log('ID Matching Test:')
+          console.log('- Card ID:', firstCard?.id, 'Type:', typeof firstCard?.id)
+          console.log('- Price card_id:', firstPrice?.card_id, 'Type:', typeof firstPrice?.card_id)
+          console.log('- Direct match:', firstCard?.id === firstPrice?.card_id)
+          console.log('- String match:', firstCard?.id?.toString() === firstPrice?.card_id?.toString())
+          console.log('- UUID without dashes:', firstCard?.id?.replace(/-/g, '') === firstPrice?.card_id?.toString())
+          console.log('=== END CRITICAL DEBUGGING ===')
         }
         
         setCards(updatedCards)
@@ -588,11 +609,17 @@ function App() {
                                 <span className="text-blue-600 dark:text-blue-400 text-lg">⏳</span>
                               </div>
                               <p className="text-base text-blue-800 dark:text-blue-200 font-bold">
-                                Price not available yet
+                                Price data will be updated soon
                               </p>
                               <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                                Try checking again later
+                                Card Added Successfully
                               </p>
+                              {/* Debug info */}
+                              <div className="mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                                <p>Debug: latest_price = {card.latest_price}</p>
+                                <p>Debug: price_count = {card.price_count}</p>
+                                <p>Debug: last_price_update = {card.last_price_update}</p>
+                              </div>
                             </div>
                           </div>
                         )}
