@@ -9,10 +9,10 @@ function App() {
   const [deployTime] = useState(() => new Date().toLocaleString())
   
   // Version tracking - prominently displayed
-  const APP_VERSION = '3.4.0'
+  const APP_VERSION = '4.0.0'
   // Static build date - only changes when we actually deploy
-  const BUILD_DATE = '29/07/2025, 14:25:00'
-  const DEPLOY_TIME = '29/07/2025, 14:25:00'
+  const BUILD_DATE = '29/07/2025, 14:30:00'
+  const DEPLOY_TIME = '29/07/2025, 14:30:00'
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -25,7 +25,7 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES (v3.4.0) ===')
+      console.log('=== FETCHING CARDS WITH PRICES (v4.0.0) ===')
       
       // Using the new cards_with_prices view as single source of truth
       const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
@@ -195,7 +195,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 dark:from-blue-900 dark:via-blue-800 dark:to-blue-700">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-100 to-indigo-200 dark:from-purple-900 dark:via-pink-800 dark:to-indigo-700">
       {/* PROMINENT VERSION DISPLAY - TOP OF PAGE */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg border-b-4 border-blue-400">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -203,7 +203,7 @@ function App() {
             <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0">
               <span className="text-xl sm:text-2xl font-bold">🎴 Trading Card Tracker</span>
               <span className="text-base sm:text-lg font-bold bg-white/30 px-3 py-2 rounded-full border-2 border-white/50 shadow-lg animate-pulse">
-                🚀 v{APP_VERSION} 🚀
+                🎉 v{APP_VERSION} 🎉
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm sm:text-base">
