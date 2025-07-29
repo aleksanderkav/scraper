@@ -65,6 +65,60 @@ function App() {
     }
   }
 
+  const checkDatabaseDirectly = async () => {
+    try {
+      console.log('=== DIRECT DATABASE CHECK ===')
+      
+      // Method 1: Try direct SQL query via REST API
+      const sqlUrl = `${supabaseUrl}/rest/v1/rpc/exec_sql`
+      const sqlResponse = await fetch(sqlUrl, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: 'SELECT * FROM cards ORDER BY created_at DESC LIMIT 5;'
+        })
+      })
+      
+      console.log('SQL query response status:', sqlResponse.status)
+      
+      if (sqlResponse.ok) {
+        const sqlData = await sqlResponse.json()
+        console.log('✅ Direct SQL query result:', sqlData)
+      } else {
+        const errorText = await sqlResponse.text()
+        console.log('❌ SQL query failed:', errorText)
+        
+        // Method 2: Try alternative approach - check table structure
+        console.log('Trying alternative approach...')
+        const tableInfoUrl = `${supabaseUrl}/rest/v1/cards?select=*&limit=1`
+        const tableResponse = await fetch(tableInfoUrl, {
+          headers: {
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        console.log('Table info response status:', tableResponse.status)
+        if (tableResponse.ok) {
+          const tableData = await tableResponse.json()
+          console.log('✅ Table structure check:', tableData)
+        } else {
+          const tableError = await tableResponse.text()
+          console.log('❌ Table structure check failed:', tableError)
+        }
+      }
+    } catch (error) {
+      console.error('❌ Direct database check error:', error)
+    } finally {
+      console.log('=== END DIRECT DATABASE CHECK ===')
+    }
+  }
+
   const handleSearch = async (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
@@ -87,7 +141,11 @@ function App() {
       }
 
       const result = await response.json()
-      console.log('Card scraper response:', result)
+      console.log('=== CARD SCRAPER RESPONSE ===')
+      console.log('Full response:', result)
+      console.log('Response type:', typeof result)
+      console.log('Response keys:', Object.keys(result))
+      console.log('=== END CARD SCRAPER RESPONSE ===')
       setSearchStatus('Card scraped successfully!')
       setSearchQuery('')
       
@@ -192,6 +250,12 @@ function App() {
                   className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-md transition duration-200"
                 >
                   Debug
+                </button>
+                <button
+                  onClick={checkDatabaseDirectly}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition duration-200"
+                >
+                  Check DB
                 </button>
               </div>
             </div>
