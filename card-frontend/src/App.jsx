@@ -6,6 +6,7 @@ function App() {
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(false)
   const [libraryLoading, setLibraryLoading] = useState(true)
+  const [deployTime] = useState(() => new Date().toLocaleString())
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -91,7 +92,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 relative pb-12">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -205,6 +206,12 @@ function App() {
           </div>
         </div>
       </div>
+      {/* Footer with deployment time */}
+      <footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+        <span className="text-xs text-gray-400 bg-white/80 dark:bg-gray-900/80 px-3 py-1 rounded shadow-sm">
+          Last deployed: {deployTime}
+        </span>
+      </footer>
     </div>
   )
 }
