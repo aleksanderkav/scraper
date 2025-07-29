@@ -73,49 +73,155 @@ async def scrape_ebay_prices(query: str) -> List[float]:
             except:
                 print("⚠️ No search results container found")
             
-            # Try multiple selectors for price elements (most specific first)
-            price_selectors = [
-                '.s-item__price .notranslate',      # Most specific - actual price text
-                '.s-item__price span.notranslate',  # Alternative specific selector
-                '.s-item__price',                   # Original selector
-                '.s-item__detail .s-item__price',   # More specific path
-                '[data-testid="item-price"]',       # Alternative data attribute
-                '.s-item .s-item__price',           # Within item container
-                '.price .notranslate',              # Generic with notranslate
-                '.price'                            # Generic fallback
+            # First, find all listing items, then extract prices from each
+            print("Looking for individual listing items...")
+            listing_items = []
+            
+            # Try to find listing item containers first
+            item_selectors = [
+                '.s-item',                          # Standard eBay listing item
+                '.srp-results .s-item',            # Items within results container
+                '[data-testid="srp-grid-item"]',   # Alternative data attribute
+                '.x-item'                          # Fallback selector
             ]
             
-            price_elements = []
-            
-            # Try each selector until we find prices
-            for selector in price_selectors:
+            for selector in item_selectors:
                 try:
-                    print(f"Trying selector: {selector}")
+                    print(f"Trying item selector: {selector}")
                     await page.wait_for_selector(selector, timeout=5000)
-                    elements = await page.query_selector_all(selector)
-                    if elements:
-                        print(f"Found {len(elements)} elements with selector: {selector}")
-                        price_elements = elements
+                    items = await page.query_selector_all(selector)
+                    if items and len(items) > 0:
+                        print(f"Found {len(items)} listing items with selector: {selector}")
+                        listing_items = items[:10]  # Take first 10 items
                         break
                 except Exception as e:
-                    print(f"Selector {selector} failed: {e}")
+                    print(f"Item selector {selector} failed: {e}")
                     continue
             
-            if not price_elements:
-                # If no specific selectors work, try to find any element containing price patterns
-                print("No price elements found with standard selectors, trying text-based search...")
+            if listing_items:
+                # Extract prices from individual listing items
+                print(f"Processing {len(listing_items)} listing items...")
                 
-                # Get all text content and search for price patterns
+                for i, item in enumerate(listing_items):
+                    try:
+                        # Look for price within this specific item
+                        price_selectors_in_item = [
+                            '.s-item__price .notranslate',
+                            '.s-item__price span',
+                            '.s-item__price',
+                            '.price .notranslate',
+                            '.price'
+                        ]
+                        
+                        item_price_found = False
+                        for price_selector in price_selectors_in_item:
+                            try:
+                                price_element = await item.query_selector(price_selector)
+                                if price_element:
+                                    price_text = await price_element.inner_text()
+                                    print(f"Item {i+1} price text: '{price_text}'")
+                                    
+                                    # Extract price using regex
+                                    price_patterns = [
+                                        r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',
+                                        r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+                                    ]
+                                    
+                                    for pattern in price_patterns:
+                                        price_match = re.search(pattern, price_text)
+                                        if price_match:
+                                            price_str = price_match.group(1).replace(',', '')
+                                            price = float(price_str)
+                                            
+                                            if 10.0 <= price <= 10000.0:
+                                                prices.append(price)
+                                                print(f"✅ Extracted price from item {i+1}: ${price}")
+                                                item_price_found = True
+                                                break
+                                    
+                                    if item_price_found:
+                                        break
+                            except Exception as e:
+                                continue
+                        
+                        if not item_price_found:
+                            print(f"❌ No valid price found in item {i+1}")
+                            
+                    except Exception as e:
+                        print(f"Error processing item {i+1}: {e}")
+                        continue
+            
+            else:
+                print("No listing items found, trying global price selectors...")
+                # Fallback to original method if no items found
+                price_selectors = [
+                    '.s-item__price .notranslate',
+                    '.s-item__price',
+                    '.price .notranslate',
+                    '.price'
+                ]
+                
+                price_elements = []
+                
+                for selector in price_selectors:
+                    try:
+                        print(f"Trying global selector: {selector}")
+                        await page.wait_for_selector(selector, timeout=5000)
+                        elements = await page.query_selector_all(selector)
+                        if elements:
+                            print(f"Found {len(elements)} elements with selector: {selector}")
+                            price_elements = elements
+                            break
+                    except Exception as e:
+                        print(f"Global selector {selector} failed: {e}")
+                        continue
+            
+                # Process price elements from global search if items method didn't work
+                if price_elements:
+                    print(f"Processing {len(price_elements)} global price elements...")
+                    
+                    for i, element in enumerate(price_elements[:10]):
+                        try:
+                            price_text = await element.inner_text()
+                            print(f"Global price element {i+1} text: '{price_text}'")
+                            
+                            price_patterns = [
+                                r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',
+                                r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)'
+                            ]
+                            
+                            price_found = False
+                            for pattern in price_patterns:
+                                price_match = re.search(pattern, price_text)
+                                if price_match:
+                                    price_str = price_match.group(1).replace(',', '')
+                                    price = float(price_str)
+                                    
+                                    if 10.0 <= price <= 10000.0:
+                                        prices.append(price)
+                                        print(f"✅ Extracted global price: ${price}")
+                                        price_found = True
+                                        break
+                            
+                            if not price_found:
+                                print(f"❌ Could not extract price from: '{price_text}'")
+                                
+                        except Exception as e:
+                            print(f"Error processing global price element {i+1}: {e}")
+                            continue
+            
+            # Final fallback: text-based search if no prices found yet
+            if not prices:
+                print("No prices found with structured approach, trying text-based search...")
+                
                 page_content = await page.content()
                 price_matches = re.findall(r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)', page_content)
                 
                 if price_matches:
                     print(f"Found {len(price_matches)} price matches in page content")
-                    for price_str in price_matches[:10]:  # Take first 10 prices
+                    for price_str in price_matches[:10]:
                         try:
                             price = float(price_str.replace(',', ''))
-                            # Filter for realistic card prices (typically $10-$10000)
-                            # Skip very low prices that are likely shipping costs or other fees
                             if 10.0 <= price <= 10000.0:
                                 prices.append(price)
                                 print(f"✅ Added price from content: ${price}")
@@ -123,46 +229,8 @@ async def scrape_ebay_prices(query: str) -> List[float]:
                             continue
                 else:
                     print("No price patterns found in page content")
-                    # Save page content for debugging
                     await page.screenshot(path="debug_screenshot.png")
                     print("Screenshot saved as debug_screenshot.png")
-            else:
-                # Extract prices from found elements
-                print(f"Processing {len(price_elements)} price elements...")
-                
-                for i, element in enumerate(price_elements[:10]):  # Check more elements
-                    try:
-                        price_text = await element.inner_text()
-                        print(f"Price element {i+1} text: '{price_text}'")
-                        
-                        # Try multiple regex patterns
-                        price_patterns = [
-                            r'\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',  # $123.45 or $1,234.56
-                            r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',    # 123.45 or 1,234.56
-                            r'[\$£€]?(\d+(?:,\d{3})*(?:\.\d{2})?)', # Original pattern
-                        ]
-                        
-                        price_found = False
-                        for pattern in price_patterns:
-                            price_match = re.search(pattern, price_text)
-                            if price_match:
-                                price_str = price_match.group(1).replace(',', '')
-                                price = float(price_str)
-                                
-                                # Filter for realistic card prices (typically $10-$10000)
-                                # Skip very low prices that are likely shipping costs or other fees
-                                if 10.0 <= price <= 10000.0:
-                                    prices.append(price)
-                                    print(f"✅ Extracted price: ${price}")
-                                    price_found = True
-                                    break
-                        
-                        if not price_found:
-                            print(f"❌ Could not extract price from: '{price_text}'")
-                            
-                    except Exception as e:
-                        print(f"Error processing price element {i+1}: {e}")
-                        continue
                         
         except Exception as e:
             print(f"Error during scraping: {e}")
