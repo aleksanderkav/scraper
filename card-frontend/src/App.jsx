@@ -73,15 +73,8 @@ function App() {
       console.log('=== FETCHING PRICE DATA ===')
       console.log('Cards to match with prices:', cards.map(c => ({ id: c.id, name: c.name })))
       
-      // Try different approaches to fetch price data
-      const approaches = [
-        // Approach 1: Fetch all price data
-        `${supabaseUrl}/rest/v1/card_prices?select=*`,
-        // Approach 2: Fetch with specific columns
-        `${supabaseUrl}/rest/v1/card_prices?select=card_id,latest_average,price_count,last_updated`,
-        // Approach 3: Try price_entries table instead
-        `${supabaseUrl}/rest/v1/price_entries?select=*`
-      ]
+      // OPTION B: Use Supabase join query for better performance and reliability
+      const joinUrl = `${supabaseUrl}/rest/v1/cards?select=*,card_prices(latest_average,price_count,last_updated)&order=created_at.desc`
       
       const headers = {
         'apikey': supabaseAnonKey,
@@ -89,116 +82,206 @@ function App() {
         'Content-Type': 'application/json'
       }
       
-      let priceData = null
-      let successfulApproach = null
+      console.log('Trying Supabase join query:', joinUrl)
       
-      for (let i = 0; i < approaches.length; i++) {
-        const url = approaches[i]
-        console.log(`Trying approach ${i + 1}:`, url)
+      try {
+        const response = await fetch(joinUrl, { headers })
+        console.log('Join query response status:', response.status)
         
-        try {
-          const response = await fetch(url, { headers })
-          console.log(`Approach ${i + 1} response status:`, response.status)
+        if (response.ok) {
+          const joinedData = await response.json()
+          console.log('✅ Join query successful with', joinedData.length, 'cards')
+          console.log('Sample joined data:', joinedData[0])
           
-          if (response.ok) {
-            const data = await response.json()
-            console.log(`✅ Approach ${i + 1} data:`, data)
+          // Process the joined data
+          const updatedCards = joinedData.map(card => {
+            const priceData = card.card_prices?.[0] // Get first price entry
+            console.log(`Card ${card.name} (${card.id}):`, {
+              hasPriceData: !!priceData,
+              priceData: priceData,
+              latest_average: priceData?.latest_average,
+              price_count: priceData?.price_count,
+              last_updated: priceData?.last_updated
+            })
             
-            if (Array.isArray(data) && data.length > 0) {
-              priceData = data
-              successfulApproach = i + 1
-              break
+            return {
+              ...card,
+              latest_price: priceData?.latest_average || null,
+              price_count: priceData?.price_count || 0,
+              last_price_update: priceData?.last_updated || null
             }
-          } else {
-            const errorText = await response.text()
-            console.log(`❌ Approach ${i + 1} failed:`, errorText)
+          })
+          
+          console.log('Updated cards with prices:', updatedCards.map(c => ({ 
+            name: c.name, 
+            latest_price: c.latest_price, 
+            price_count: c.price_count,
+            last_price_update: c.last_price_update
+          })))
+          
+          // Check if any cards actually got prices
+          const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
+          console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
+          
+          if (cardsWithPrices.length === 0) {
+            console.log('⚠️ WARNING: No cards received price data from join query')
+            console.log('Falling back to separate queries...')
+            
+            // Fallback to original approach
+            return await fetchPriceDataFallback(cards)
           }
-        } catch (error) {
-          console.log(`❌ Approach ${i + 1} error:`, error.message)
+          
+          setCards(updatedCards)
+          console.log('✅ Cards updated with price data from join query')
+          return
+        } else {
+          const errorText = await response.text()
+          console.log('❌ Join query failed:', errorText)
+          console.log('Falling back to separate queries...')
         }
+      } catch (error) {
+        console.log('❌ Join query error:', error.message)
+        console.log('Falling back to separate queries...')
       }
       
-      if (priceData && successfulApproach) {
-        console.log(`✅ Using approach ${successfulApproach} with ${priceData.length} price entries`)
-        console.log('Sample price data:', priceData[0]) // Debug the structure
-        console.log('Price data keys:', Object.keys(priceData[0] || {}))
-        console.log('=== DETAILED PRICE DATA ANALYSIS ===')
-        console.log('First 3 price entries:', priceData.slice(0, 3))
+      // Fallback to original approach
+      await fetchPriceDataFallback(cards)
+      
+    } catch (error) {
+      console.error('❌ Error fetching price data:', error)
+    } finally {
+      console.log('=== END FETCHING PRICE DATA ===')
+    }
+  }
+
+  const fetchPriceDataFallback = async (cards) => {
+    try {
+      console.log('=== FALLBACK: SEPARATE QUERIES ===')
+      
+      // OPTION A: Use Map for efficient lookup
+      const priceMap = new Map()
+      
+      // Fetch all price data
+      const priceResponse = await fetch(`${supabaseUrl}/rest/v1/card_prices?select=*`, {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (priceResponse.ok) {
+        const priceData = await priceResponse.json()
+        console.log('✅ Fetched', priceData.length, 'price entries')
         
-        // CRITICAL FIX: Try multiple ID matching strategies
-        const updatedCards = cards.map(card => {
-          let cardPrice = null
-          
-          if (successfulApproach === 1 || successfulApproach === 2) {
-            // Strategy 1: Exact match
-            cardPrice = priceData.find(price => price.card_id === card.id)
-            
-            // Strategy 2: String conversion match
-            if (!cardPrice) {
-              cardPrice = priceData.find(price => 
-                price.card_id && card.id && 
-                price.card_id.toString() === card.id.toString()
-              )
-            }
-            
-            // Strategy 3: Partial ID match (first 8 characters)
-            if (!cardPrice) {
-              cardPrice = priceData.find(price => 
-                price.card_id && card.id && 
-                price.card_id.toString().substring(0, 8) === card.id.substring(0, 8)
-              )
-            }
-            
-            // Strategy 4: Check if card_id is a number and card.id is UUID
-            if (!cardPrice) {
-              cardPrice = priceData.find(price => 
-                typeof price.card_id === 'number' && 
-                card.id && 
-                price.card_id.toString() === card.id.replace(/-/g, '').substring(0, 8)
-              )
-            }
-            
-            console.log(`Card ${card.name} (${card.id}):`, cardPrice) // Debug each card
-            
-            // Enhanced debugging for price mapping
-            if (cardPrice) {
-              console.log(`✅ Found price data for ${card.name}:`, {
-                card_id: cardPrice.card_id,
-                latest_average: cardPrice.latest_average,
-                price_count: cardPrice.price_count,
-                last_updated: cardPrice.last_updated,
-                all_keys: Object.keys(cardPrice)
-              })
-            } else {
-              console.log(`❌ No price data found for ${card.name} (${card.id})`)
-              // Show all available price entries for debugging
-              console.log('Available price entries:', priceData.map(p => ({ 
-                card_id: p.card_id, 
-                card_id_type: typeof p.card_id,
-                latest_average: p.latest_average 
-              })))
-            }
-            
-            return {
-              ...card,
-              latest_price: cardPrice?.latest_average || null,
-              price_count: cardPrice?.price_count || 0,
-              last_price_update: cardPrice?.last_updated || null
-            }
-          } else if (successfulApproach === 3) {
-            // price_entries table approach
-            const cardEntries = priceData.filter(entry => entry.card_id === card.id)
-            const latestEntry = cardEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
-            return {
-              ...card,
-              latest_price: latestEntry?.price || null,
-              price_count: cardEntries.length,
-              last_price_update: latestEntry?.created_at || null
-            }
+        // Build price map for efficient lookup
+        priceData.forEach(price => {
+          if (price.card_id) {
+            priceMap.set(price.card_id.toString(), price)
           }
-          
-          return card
         })
+        
+        console.log('Price map size:', priceMap.size)
+        console.log('Sample price map entries:', Array.from(priceMap.entries()).slice(0, 3))
+        
+        // Map cards with robust UUID comparison
+        const updatedCards = cards.map(card => {
+          const cardId = card.id?.toString()
+          const priceData = priceMap.get(cardId)
+          
+          console.log(`Card ${card.name} (${cardId}):`, {
+            found: !!priceData,
+            priceData: priceData,
+            latest_average: priceData?.latest_average,
+            price_count: priceData?.price_count,
+            last_updated: priceData?.last_updated
+          })
+          
+          return {
+            ...card,
+            latest_price: priceData?.latest_average || null,
+            price_count: priceData?.price_count || 0,
+            last_price_update: priceData?.last_updated || null
+          }
+        })
+        
+        console.log('Updated cards with prices:', updatedCards.map(c => ({ 
+          name: c.name, 
+          latest_price: c.latest_price, 
+          price_count: c.price_count,
+          last_price_update: c.last_price_update
+        })))
+        
+        // Check if any cards actually got prices
+        const cardsWithPrices = updatedCards.filter(c => c.latest_price && c.latest_price > 0)
+        console.log(`📊 Cards with prices: ${cardsWithPrices.length}/${updatedCards.length}`)
+        
+        if (cardsWithPrices.length === 0) {
+          console.log('⚠️ WARNING: No cards received price data despite successful fetch')
+          console.log('This suggests a mapping issue between card IDs and price data')
+          
+          // CRITICAL DEBUGGING: Show the actual data structures
+          console.log('=== CRITICAL DEBUGGING ===')
+          console.log('First 3 cards:', cards.slice(0, 3).map(c => ({ id: c.id, name: c.name, id_type: typeof c.id })))
+          console.log('First 3 price entries:', Array.from(priceMap.entries()).slice(0, 3).map(([key, value]) => ({ 
+            card_id: key, 
+            card_id_type: typeof key,
+            latest_average: value.latest_average,
+            all_keys: Object.keys(value)
+          })))
+          
+          // Test ID matching manually
+          const firstCard = cards[0]
+          const firstPriceKey = Array.from(priceMap.keys())[0]
+          const firstPrice = priceMap.get(firstPriceKey)
+          console.log('ID Matching Test:')
+          console.log('- Card ID:', firstCard?.id, 'Type:', typeof firstCard?.id)
+          console.log('- Price card_id:', firstPriceKey, 'Type:', typeof firstPriceKey)
+          console.log('- Direct match:', firstCard?.id === firstPriceKey)
+          console.log('- String match:', firstCard?.id?.toString() === firstPriceKey)
+          
+          // CRITICAL: Test the actual mapping logic that's failing
+          console.log('=== MAPPING LOGIC TEST ===')
+          const testCard = cards[0]
+          const testPriceKey = Array.from(priceMap.keys())[0]
+          const testPrice = priceMap.get(testPriceKey)
+          
+          // Test all the strategies from the code
+          const strategy1 = testPriceKey === testCard.id
+          const strategy2 = testPriceKey === testCard.id?.toString()
+          
+          console.log('Strategy 1 (Exact match):', strategy1)
+          console.log('Strategy 2 (String match):', strategy2)
+          
+          // Show what the mapping would produce
+          const mappedCard = {
+            ...testCard,
+            latest_price: testPrice?.latest_average || null,
+            price_count: testPrice?.price_count || 0,
+            last_price_update: testPrice?.last_updated || null
+          }
+          console.log('Mapped card result:', {
+            name: mappedCard.name,
+            latest_price: mappedCard.latest_price,
+            price_count: mappedCard.price_count,
+            last_price_update: mappedCard.last_price_update
+          })
+          console.log('=== END MAPPING LOGIC TEST ===')
+          console.log('=== END CRITICAL DEBUGGING ===')
+        }
+        
+        setCards(updatedCards)
+        console.log('✅ Cards updated with price data from fallback')
+      } else {
+        const errorText = await priceResponse.text()
+        console.log('❌ Price data fetch failed:', errorText)
+      }
+    } catch (error) {
+      console.error('❌ Fallback error:', error)
+    } finally {
+      console.log('=== END FALLBACK: SEPARATE QUERIES ===')
+    }
+  }
         
         console.log('Updated cards with prices:', updatedCards.map(c => ({ 
           name: c.name, 
@@ -511,6 +594,19 @@ function App() {
                   console.log('Cards array:', cards)
                   console.log('Cards length:', cards.length)
                   console.log('Library loading:', libraryLoading)
+                  
+                  // Show first card structure
+                  if (cards.length > 0) {
+                    console.log('=== FIRST CARD STRUCTURE ===')
+                    console.log('First card:', cards[0])
+                    console.log('First card keys:', Object.keys(cards[0]))
+                    console.log('Price fields:')
+                    console.log('- latest_price:', cards[0].latest_price, 'Type:', typeof cards[0].latest_price)
+                    console.log('- price_count:', cards[0].price_count, 'Type:', typeof cards[0].price_count)
+                    console.log('- last_price_update:', cards[0].last_price_update, 'Type:', typeof cards[0].last_price_update)
+                    console.log('=== END FIRST CARD STRUCTURE ===')
+                  }
+                  
                   console.log('Environment variables:')
                   console.log('- VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL)
                   console.log('- VITE_SUPABASE_ANON_KEY (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
@@ -642,19 +738,19 @@ function App() {
                           <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
                             <div className="flex justify-between items-center mb-4">
                               <span className="text-base font-bold text-green-800 dark:text-green-200">
-                                Latest Price
+                                💰 Latest Price
                               </span>
-                              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              <span className="text-3xl font-bold text-green-600 dark:text-green-400">
                                 ${card.latest_price.toFixed(2)}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
-                                {card.price_count} entries
+                                📊 {card.price_count} entries
                               </span>
                               {card.last_price_update && (
                                 <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
-                                  {new Date(card.last_price_update).toLocaleDateString()}
+                                  📅 {new Date(card.last_price_update).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
