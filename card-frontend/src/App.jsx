@@ -69,33 +69,18 @@ function App() {
     try {
       console.log('=== DIRECT DATABASE CHECK ===')
       
-      // Method 1: Try direct SQL query via REST API
-      const sqlUrl = `${supabaseUrl}/rest/v1/rpc/exec_sql`
-      const sqlResponse = await fetch(sqlUrl, {
-        method: 'POST',
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: 'SELECT * FROM cards ORDER BY created_at DESC LIMIT 5;'
-        })
-      })
+      // Method 1: Try different query approaches
+      const queries = [
+        { name: 'All cards', url: `${supabaseUrl}/rest/v1/cards?select=*` },
+        { name: 'Cards with limit', url: `${supabaseUrl}/rest/v1/cards?select=*&limit=10` },
+        { name: 'Cards ordered by created_at', url: `${supabaseUrl}/rest/v1/cards?select=*&order=created_at.desc` },
+        { name: 'Cards with specific columns', url: `${supabaseUrl}/rest/v1/cards?select=id,name,created_at` },
+        { name: 'Count cards', url: `${supabaseUrl}/rest/v1/cards?select=count` }
+      ]
       
-      console.log('SQL query response status:', sqlResponse.status)
-      
-      if (sqlResponse.ok) {
-        const sqlData = await sqlResponse.json()
-        console.log('✅ Direct SQL query result:', sqlData)
-      } else {
-        const errorText = await sqlResponse.text()
-        console.log('❌ SQL query failed:', errorText)
-        
-        // Method 2: Try alternative approach - check table structure
-        console.log('Trying alternative approach...')
-        const tableInfoUrl = `${supabaseUrl}/rest/v1/cards?select=*&limit=1`
-        const tableResponse = await fetch(tableInfoUrl, {
+      for (const query of queries) {
+        console.log(`\n--- Testing: ${query.name} ---`)
+        const response = await fetch(query.url, {
           headers: {
             'apikey': supabaseAnonKey,
             'Authorization': `Bearer ${supabaseAnonKey}`,
@@ -103,15 +88,39 @@ function App() {
           }
         })
         
-        console.log('Table info response status:', tableResponse.status)
-        if (tableResponse.ok) {
-          const tableData = await tableResponse.json()
-          console.log('✅ Table structure check:', tableData)
+        console.log(`Response status: ${response.status}`)
+        if (response.ok) {
+          const data = await response.json()
+          console.log(`✅ ${query.name} result:`, data)
+          console.log(`✅ Data type:`, typeof data)
+          console.log(`✅ Data length:`, Array.isArray(data) ? data.length : 'N/A')
         } else {
-          const tableError = await tableResponse.text()
-          console.log('❌ Table structure check failed:', tableError)
+          const errorText = await response.text()
+          console.log(`❌ ${query.name} failed:`, errorText)
         }
       }
+      
+      // Method 2: Try to check if the table exists and has data
+      console.log('\n--- Checking table structure ---')
+      const tableCheckUrl = `${supabaseUrl}/rest/v1/cards?select=*&limit=1`
+      const tableResponse = await fetch(tableCheckUrl, {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      console.log('Table check response status:', tableResponse.status)
+      if (tableResponse.ok) {
+        const tableData = await tableResponse.json()
+        console.log('✅ Table structure check:', tableData)
+        console.log('✅ Table exists and is accessible')
+      } else {
+        const tableError = await tableResponse.text()
+        console.log('❌ Table structure check failed:', tableError)
+      }
+      
     } catch (error) {
       console.error('❌ Direct database check error:', error)
     } finally {
