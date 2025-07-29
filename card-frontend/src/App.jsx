@@ -19,10 +19,10 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES ===')
+      console.log('=== FETCHING CARDS WITH PRICES (v2) ===')
       
-      // Use the new cards_with_prices view
-      const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
+      // Try the new cards_with_prices view first, fallback to manual mapping
+      let apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
       console.log('Full API URL:', apiUrl)
       
       const headers = {
@@ -36,8 +36,11 @@ function App() {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('❌ Cards with prices API error response:', errorText)
-        throw new Error(`HTTP error! status: ${response.status}`)
+        console.log('❌ Cards with prices view not available, falling back to manual mapping')
+        console.log('Error:', errorText)
+        
+        // Fallback to manual mapping approach
+        return await fetchCardsWithManualMapping()
       }
 
       const cardsWithPrices = await response.json()
@@ -70,11 +73,81 @@ function App() {
       setSearchStatus('Error loading card library')
     } finally {
       setLibraryLoading(false)
-      console.log('=== END FETCHING CARDS WITH PRICES ===')
+      console.log('=== END FETCHING CARDS WITH PRICES (v2) ===')
     }
   }
 
-  // Removed fetchPriceData and fetchPriceDataFallback functions - no longer needed with cards_with_prices view
+  // Fallback function for when cards_with_prices view is not available
+  const fetchCardsWithManualMapping = async () => {
+    try {
+      console.log('=== FALLBACK: MANUAL MAPPING ===')
+      
+      // Fetch cards
+      const cardsUrl = `${supabaseUrl}/rest/v1/cards?select=*&order=created_at.desc`
+      const cardsResponse = await fetch(cardsUrl, { headers })
+      
+      if (!cardsResponse.ok) {
+        throw new Error(`Cards fetch failed: ${cardsResponse.status}`)
+      }
+      
+      const cards = await cardsResponse.json()
+      console.log('✅ Fetched', cards.length, 'cards')
+      
+      // Fetch price data
+      const pricesUrl = `${supabaseUrl}/rest/v1/card_prices?select=*`
+      const pricesResponse = await fetch(pricesUrl, { headers })
+      
+      if (!pricesResponse.ok) {
+        throw new Error(`Prices fetch failed: ${pricesResponse.status}`)
+      }
+      
+      const prices = await pricesResponse.json()
+      console.log('✅ Fetched', prices.length, 'price entries')
+      
+      // Create price map for efficient lookup
+      const priceMap = new Map()
+      prices.forEach(price => {
+        if (price.card_id) {
+          priceMap.set(price.card_id.toString(), price)
+        }
+      })
+      
+      // Map cards with prices
+      const cardsWithPrices = cards.map(card => {
+        const cardId = card.id?.toString()
+        const priceData = priceMap.get(cardId)
+        
+        return {
+          ...card,
+          latest_price: priceData?.average_price || null,
+          last_price_update: priceData?.last_seen || null,
+          price_count: priceData ? 1 : 0
+        }
+      })
+      
+      // Log sample structure
+      if (cardsWithPrices.length > 0) {
+        console.log('=== SAMPLE CARD STRUCTURE (FALLBACK) ===')
+        console.log('Sample card:', {
+          name: cardsWithPrices[0].name,
+          latest_price: cardsWithPrices[0].latest_price,
+          last_price_update: cardsWithPrices[0].last_price_update,
+          price_count: cardsWithPrices[0].price_count,
+          id: cardsWithPrices[0].id
+        })
+        console.log('=== END SAMPLE CARD STRUCTURE ===')
+      }
+      
+      setCards(cardsWithPrices)
+      console.log('✅ Cards updated with manual mapping')
+      
+    } catch (error) {
+      console.error('❌ Fallback mapping error:', error)
+      setSearchStatus('Error loading card library')
+    } finally {
+      console.log('=== END FALLBACK: MANUAL MAPPING ===')
+    }
+  }
 
   const checkDatabaseDirectly = async () => {
     try {
