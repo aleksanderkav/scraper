@@ -43,8 +43,8 @@ The function works with these tables:
 ### Environment Variables
 
 Set these in your Supabase project:
-- `SUPABASE_URL`: Your Supabase project URL
-- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+- `SUPABASE_URL`: Your Supabase project URL (optional, defaults to project URL)
+- `SERVICE_ROLE_KEY`: Your Supabase service role key
 
 ### Deployment
 
