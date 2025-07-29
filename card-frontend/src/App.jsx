@@ -71,10 +71,17 @@ function App() {
   const fetchPriceData = async (cards) => {
     try {
       console.log('=== FETCHING PRICE DATA ===')
+      console.log('Cards to match with prices:', cards.map(c => ({ id: c.id, name: c.name })))
       
-      // Fetch price data for all cards
-      const priceUrl = `${supabaseUrl}/rest/v1/card_prices?select=*&order=last_updated.desc`
-      console.log('Price API URL:', priceUrl)
+      // Try different approaches to fetch price data
+      const approaches = [
+        // Approach 1: Fetch all price data
+        `${supabaseUrl}/rest/v1/card_prices?select=*`,
+        // Approach 2: Fetch with specific columns
+        `${supabaseUrl}/rest/v1/card_prices?select=card_id,latest_average,price_count,last_updated`,
+        // Approach 3: Try price_entries table instead
+        `${supabaseUrl}/rest/v1/price_entries?select=*`
+      ]
       
       const headers = {
         'apikey': supabaseAnonKey,
@@ -82,28 +89,70 @@ function App() {
         'Content-Type': 'application/json'
       }
       
-      const response = await fetch(priceUrl, { headers })
-      console.log('Price response status:', response.status)
+      let priceData = null
+      let successfulApproach = null
       
-      if (response.ok) {
-        const priceData = await response.json()
-        console.log('✅ Price data:', priceData)
+      for (let i = 0; i < approaches.length; i++) {
+        const url = approaches[i]
+        console.log(`Trying approach ${i + 1}:`, url)
         
-        // Update cards with price information
-        const updatedCards = cards.map(card => {
-          const cardPrice = priceData.find(price => price.card_id === card.id)
-          return {
-            ...card,
-            latest_price: cardPrice?.latest_average || null,
-            price_count: cardPrice?.price_count || 0,
-            last_price_update: cardPrice?.last_updated || null
+        try {
+          const response = await fetch(url, { headers })
+          console.log(`Approach ${i + 1} response status:`, response.status)
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log(`✅ Approach ${i + 1} data:`, data)
+            
+            if (Array.isArray(data) && data.length > 0) {
+              priceData = data
+              successfulApproach = i + 1
+              break
+            }
+          } else {
+            const errorText = await response.text()
+            console.log(`❌ Approach ${i + 1} failed:`, errorText)
           }
+        } catch (error) {
+          console.log(`❌ Approach ${i + 1} error:`, error.message)
+        }
+      }
+      
+      if (priceData && successfulApproach) {
+        console.log(`✅ Using approach ${successfulApproach} with ${priceData.length} price entries`)
+        
+        // Update cards with price information based on the successful approach
+        const updatedCards = cards.map(card => {
+          let cardPrice = null
+          
+          if (successfulApproach === 1 || successfulApproach === 2) {
+            // card_prices table approach
+            cardPrice = priceData.find(price => price.card_id === card.id)
+            return {
+              ...card,
+              latest_price: cardPrice?.latest_average || null,
+              price_count: cardPrice?.price_count || 0,
+              last_price_update: cardPrice?.last_updated || null
+            }
+          } else if (successfulApproach === 3) {
+            // price_entries table approach
+            const cardEntries = priceData.filter(entry => entry.card_id === card.id)
+            const latestEntry = cardEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+            return {
+              ...card,
+              latest_price: latestEntry?.price || null,
+              price_count: cardEntries.length,
+              last_price_update: latestEntry?.created_at || null
+            }
+          }
+          
+          return card
         })
         
         setCards(updatedCards)
         console.log('✅ Cards updated with price data')
       } else {
-        console.log('⚠️ Could not fetch price data, but cards are loaded')
+        console.log('⚠️ No price data found with any approach')
       }
     } catch (error) {
       console.error('❌ Error fetching price data:', error)
@@ -348,6 +397,12 @@ function App() {
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition duration-200"
                 >
                   🔍 Check DB
+                </button>
+                <button
+                  onClick={() => fetchPriceData(cards)}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded-lg transition duration-200"
+                >
+                  💰 Test Prices
                 </button>
               </div>
             </div>
