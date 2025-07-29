@@ -60,13 +60,29 @@ async def scrape_ebay_prices(query: str) -> List[float]:
             # Wait a bit for page to fully load
             await page.wait_for_timeout(2000)
             
-            # Try multiple selectors for price elements
+            # Verify we're on a results page with sold listings
+            page_title = await page.title()
+            page_url = page.url
+            print(f"Page title: {page_title}")
+            print(f"Current URL: {page_url}")
+            
+            # Check if we have search results
+            try:
+                await page.wait_for_selector('.srp-results', timeout=5000)
+                print("✅ Found search results container")
+            except:
+                print("⚠️ No search results container found")
+            
+            # Try multiple selectors for price elements (most specific first)
             price_selectors = [
-                '.s-item__price .notranslate',  # More specific selector
-                '.s-item__price',               # Original selector
-                '[data-testid="item-price"]',   # Alternative data attribute
-                '.s-item__detail .s-item__price', # More specific path
-                '.price'                        # Generic fallback
+                '.s-item__price .notranslate',      # Most specific - actual price text
+                '.s-item__price span.notranslate',  # Alternative specific selector
+                '.s-item__price',                   # Original selector
+                '.s-item__detail .s-item__price',   # More specific path
+                '[data-testid="item-price"]',       # Alternative data attribute
+                '.s-item .s-item__price',           # Within item container
+                '.price .notranslate',              # Generic with notranslate
+                '.price'                            # Generic fallback
             ]
             
             price_elements = []
@@ -95,12 +111,14 @@ async def scrape_ebay_prices(query: str) -> List[float]:
                 
                 if price_matches:
                     print(f"Found {len(price_matches)} price matches in page content")
-                    for price_str in price_matches[:5]:  # Take first 5 prices
+                    for price_str in price_matches[:10]:  # Take first 10 prices
                         try:
                             price = float(price_str.replace(',', ''))
-                            # Filter out unrealistic prices (less than $1 or more than $10000)
-                            if 1.0 <= price <= 10000.0:
+                            # Filter for realistic card prices (typically $10-$10000)
+                            # Skip very low prices that are likely shipping costs or other fees
+                            if 10.0 <= price <= 10000.0:
                                 prices.append(price)
+                                print(f"✅ Added price from content: ${price}")
                         except ValueError:
                             continue
                 else:
@@ -131,8 +149,9 @@ async def scrape_ebay_prices(query: str) -> List[float]:
                                 price_str = price_match.group(1).replace(',', '')
                                 price = float(price_str)
                                 
-                                # Filter out unrealistic prices
-                                if 1.0 <= price <= 10000.0:
+                                # Filter for realistic card prices (typically $10-$10000)
+                                # Skip very low prices that are likely shipping costs or other fees
+                                if 10.0 <= price <= 10000.0:
                                     prices.append(price)
                                     print(f"✅ Extracted price: ${price}")
                                     price_found = True
