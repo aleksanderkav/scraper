@@ -9,7 +9,7 @@ function App() {
   const [deployTime] = useState(() => new Date().toLocaleString())
   
   // Version tracking - prominently displayed
-  const APP_VERSION = '3.0.0'
+  const APP_VERSION = '3.1.0'
   const BUILD_DATE = new Date().toLocaleString()
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -23,7 +23,7 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES (v3.0.0) ===')
+      console.log('=== FETCHING CARDS WITH PRICES (v3.1.0) ===')
       
       // Using the new cards_with_prices view as single source of truth
       const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
@@ -193,7 +193,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 dark:from-blue-900 dark:via-blue-800 dark:to-blue-700">
       {/* PROMINENT VERSION DISPLAY - TOP OF PAGE */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3">
@@ -243,7 +243,7 @@ function App() {
               </div>
               <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-green-200 dark:border-green-700">
                 <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium text-center sm:text-left">
-                  🔧 Latest backend integration • 💰 Price display active • 🚀 Scrape integration ready • 📱 Mobile optimized
+                  🔧 Latest backend integration • 💰 Price display active • 🚀 Scrape integration ready • 📱 Mobile optimized • 🔵 Blue background test
                 </p>
               </div>
             </div>
