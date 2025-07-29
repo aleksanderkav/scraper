@@ -9,7 +9,7 @@ function App() {
   const [deployTime] = useState(() => new Date().toLocaleString())
   
   // Version tracking - prominently displayed
-  const APP_VERSION = '3.1.0'
+  const APP_VERSION = '3.2.0'
   const BUILD_DATE = new Date().toLocaleString()
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -23,7 +23,7 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('=== FETCHING CARDS WITH PRICES (v3.1.0) ===')
+      console.log('=== FETCHING CARDS WITH PRICES (v3.2.0) ===')
       
       // Using the new cards_with_prices view as single source of truth
       const apiUrl = `${supabaseUrl}/rest/v1/cards_with_prices?select=*&order=created_at.desc`
@@ -195,19 +195,19 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200 dark:from-blue-900 dark:via-blue-800 dark:to-blue-700">
       {/* PROMINENT VERSION DISPLAY - TOP OF PAGE */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-3">
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg border-b-4 border-blue-400">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0">
-              <span className="text-lg sm:text-xl font-bold">🎴 Trading Card Tracker</span>
-              <span className="text-sm sm:text-base font-semibold bg-white/20 px-2 py-1 rounded-full">
+              <span className="text-xl sm:text-2xl font-bold">🎴 Trading Card Tracker</span>
+              <span className="text-base sm:text-lg font-bold bg-white/30 px-3 py-2 rounded-full border-2 border-white/50 shadow-lg">
                 v{APP_VERSION}
               </span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm">
-              <span>Built: {BUILD_DATE}</span>
-              <span className="hidden sm:inline">•</span>
-              <span>Deployed: {deployTime}</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm sm:text-base">
+              <span className="font-medium">Built: {BUILD_DATE}</span>
+              <span className="hidden sm:inline font-bold">•</span>
+              <span className="font-medium">Deployed: {deployTime}</span>
             </div>
           </div>
         </div>
@@ -403,35 +403,35 @@ function App() {
             ) : (
               <div>
                 <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mb-6 sm:mb-8 font-bold">Found {cards.length} card(s)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
                   {cards.map((card, index) => (
-                    <div key={index} className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/40 dark:border-slate-700/60 overflow-hidden group transform hover:-translate-y-2">
+                    <div key={index} className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-xl sm:hover:shadow-2xl transition-all duration-300 border border-white/40 dark:border-slate-700/60 overflow-hidden group transform hover:-translate-y-1 sm:hover:-translate-y-2">
                       {/* Card Header */}
-                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-4 sm:p-6 text-white relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-                        <div className="relative">
-                          <h3 className="font-bold text-lg sm:text-xl truncate mb-1 sm:mb-2">
-                            {card.name || 'Unknown Card'}
-                          </h3>
-                          <p className="text-blue-100 text-xs sm:text-sm opacity-90 font-medium">
-                            #{card.id?.substring(0, 8)}...
-                          </p>
+                                              <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-3 sm:p-4 lg:p-6 text-white relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
+                          <div className="relative">
+                            <h3 className="font-bold text-base sm:text-lg lg:text-xl truncate mb-1 sm:mb-2 leading-tight">
+                              {card.name || 'Unknown Card'}
+                            </h3>
+                            <p className="text-blue-100 text-xs sm:text-sm opacity-90 font-medium">
+                              #{card.id?.substring(0, 8)}...
+                            </p>
+                          </div>
                         </div>
-                      </div>
                       
                       {/* Card Content */}
-                      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+                      <div className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-5">
                         {/* Price Information */}
                         {card.latest_price && card.latest_price > 0 ? (
-                          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 sm:p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
-                            <div className="flex justify-between items-center mb-3 sm:mb-4">
-                              <span className="text-sm sm:text-base font-bold text-green-800 dark:text-green-200">
-                                💰 Latest Price
-                              </span>
-                              <span className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
-                                ${card.latest_price.toFixed(2)}
-                              </span>
-                            </div>
+                                                      <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
+                                                          <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-4">
+                                <span className="text-xs sm:text-sm lg:text-base font-bold text-green-800 dark:text-green-200">
+                                  💰 Latest Price
+                                </span>
+                                <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 dark:text-green-400">
+                                  ${card.latest_price.toFixed(2)}
+                                </span>
+                              </div>
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
                               <span className="bg-green-100 dark:bg-green-800 px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 text-center">
                                 📊 {card.price_count} entries
