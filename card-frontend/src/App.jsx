@@ -196,8 +196,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-100 to-indigo-200 dark:from-purple-900 dark:via-pink-800 dark:to-indigo-700">
+      {/* BRIGHT RED DEPLOYMENT BANNER - FORCE VISIBILITY */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center py-2 font-bold text-lg animate-pulse">
+        🚨 DEPLOYMENT v4.0.0 SUCCESSFUL - PURPLE BACKGROUND ACTIVE 🚨
+      </div>
+      
       {/* PROMINENT VERSION DISPLAY - TOP OF PAGE */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg border-b-4 border-blue-400">
+      <div className="fixed top-12 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white shadow-lg border-b-4 border-blue-400">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-3 mb-2 sm:mb-0">
@@ -216,7 +221,7 @@ function App() {
       </div>
 
       {/* MAIN CONTENT - ADJUSTED FOR FIXED HEADER */}
-      <div className="pt-24 pb-8">
+      <div className="pt-36 pb-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 space-y-6 sm:space-y-8 lg:space-y-12">
           {/* Main Header */}
           <div className="text-center">
