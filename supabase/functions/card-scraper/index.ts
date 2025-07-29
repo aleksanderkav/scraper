@@ -148,46 +148,74 @@ serve(async (req) => {
       throw new Error(`Error inserting price entries: ${priceInsertError.message}`)
     }
 
-    // Check if card_prices record exists
-    const { data: existingCardPrice, error: cardPriceCheckError } = await supabase
-      .from('card_prices')
-      .select('id')
-      .eq('card_id', cardId)
-      .single()
-
+    // Calculate aggregated price data from all price entries for this card
     let cardPriceUpdated = false
+    
+    const { data: aggregatedData, error: aggregationError } = await supabase
+      .rpc('calculate_card_price_summary', { card_uuid: cardId })
 
-    if (cardPriceCheckError && cardPriceCheckError.code !== 'PGRST116') {
-      throw new Error(`Error checking card price existence: ${cardPriceCheckError.message}`)
-    }
-
-    if (existingCardPrice) {
-      // Update existing record
-      const { error: updateError } = await supabase
+    if (aggregationError) {
+      // Fallback: use the scraper data if RPC function doesn't exist
+      console.warn('RPC function not available, using scraper data as fallback:', aggregationError.message)
+      
+      const { data: existingCardPrice, error: cardPriceCheckError } = await supabase
         .from('card_prices')
-        .update({
-          average_price: scraperData.average,
-          last_seen: scraperData.timestamp
-        })
+        .select('id')
         .eq('card_id', cardId)
+        .single()
 
-      if (updateError) {
-        throw new Error(`Error updating card price: ${updateError.message}`)
+      if (cardPriceCheckError && cardPriceCheckError.code !== 'PGRST116') {
+        throw new Error(`Error checking card price existence: ${cardPriceCheckError.message}`)
       }
-      cardPriceUpdated = true
+
+      if (existingCardPrice) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('card_prices')
+          .update({
+            average_price: scraperData.average,
+            last_seen: scraperData.timestamp
+          })
+          .eq('card_id', cardId)
+
+        if (updateError) {
+          throw new Error(`Error updating card price: ${updateError.message}`)
+        }
+        cardPriceUpdated = true
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('card_prices')
+          .insert({
+            card_id: cardId,
+            average_price: scraperData.average,
+            last_seen: scraperData.timestamp
+          })
+
+        if (insertError) {
+          throw new Error(`Error inserting card price: ${insertError.message}`)
+        }
+        cardPriceUpdated = true
+      }
     } else {
-      // Insert new record
-      const { error: insertError } = await supabase
+      // Use the calculated aggregated data
+      const { average_price, last_seen, price_count } = aggregatedData
+      
+      // Upsert the card_prices record with calculated data
+      const { error: upsertError } = await supabase
         .from('card_prices')
-        .insert({
+        .upsert({
           card_id: cardId,
-          average_price: scraperData.average,
-          last_seen: scraperData.timestamp
+          average_price: average_price,
+          last_seen: last_seen
+        }, {
+          onConflict: 'card_id'
         })
 
-      if (insertError) {
-        throw new Error(`Error inserting card price: ${insertError.message}`)
+      if (upsertError) {
+        throw new Error(`Error upserting card price: ${upsertError.message}`)
       }
+      
       cardPriceUpdated = true
     }
 
