@@ -18,6 +18,8 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
+      console.log('Fetching cards from Supabase...')
+      
       const response = await fetch(`${supabaseUrl}/rest/v1/cards?select=*`, {
         headers: {
           'apikey': supabaseAnonKey,
@@ -26,11 +28,17 @@ function App() {
         }
       })
 
+      console.log('Cards API response status:', response.status)
+
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Cards API error response:', errorText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
+      console.log('Fetched cards:', data)
+      console.log('Number of cards:', data.length)
       setCards(data)
     } catch (error) {
       console.error('Error fetching cards:', error)
@@ -62,13 +70,18 @@ function App() {
       }
 
       const result = await response.json()
+      console.log('Card scraper response:', result)
       setSearchStatus('Card scraped successfully!')
       setSearchQuery('')
       
-      // Refresh the card library to show the new card
-      setTimeout(() => {
-        fetchCards()
-      }, 1000)
+      // Refresh the card library immediately and then again after a delay
+      await fetchCards()
+      
+      // Also refresh after a longer delay to ensure the card is fully processed
+      setTimeout(async () => {
+        console.log('Refreshing card library after delay...')
+        await fetchCards()
+      }, 2000)
     } catch (error) {
       console.error('Error scraping card:', error)
       setSearchStatus('Error scraping card. Please try again.')
@@ -136,9 +149,18 @@ function App() {
         {/* Card Library */}
         <div className="max-w-7xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-              Card Library
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                Card Library
+              </h2>
+              <button
+                onClick={fetchCards}
+                disabled={libraryLoading}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white text-sm rounded-md transition duration-200"
+              >
+                {libraryLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
             
             {libraryLoading ? (
               <div className="text-center py-8">
