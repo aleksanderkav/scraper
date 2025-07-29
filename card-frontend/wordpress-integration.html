@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Scraper - WordPress Integration Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .iframe-container {
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            display: block;
+        }
+        .code-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        h1, h2 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Card Scraper - WordPress Integration</h1>
+        
+        <h2>Live Preview</h2>
+        <div class="iframe-container">
+            <iframe 
+                src="http://localhost:5173" 
+                title="Card Scraper Application"
+                allow="fullscreen">
+            </iframe>
+        </div>
+
+        <h2>WordPress Integration Code</h2>
+        <p>Copy and paste this code into your WordPress page or post:</p>
+        
+        <div class="code-example">
+&lt;!-- Card Scraper Application --&gt;
+&lt;div style="margin: 20px 0;"&gt;
+    &lt;iframe 
+        src="https://your-deployed-app.com" 
+        width="100%" 
+        height="800px" 
+        frameborder="0"
+        style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+        title="Card Scraper Application"
+        allow="fullscreen"&gt;
+    &lt;/iframe&gt;
+&lt;/div&gt;
+        </div>
+
+        <h2>WordPress Plugin Integration</h2>
+        <p>For better integration, you can create a WordPress shortcode:</p>
+        
+        <div class="code-example">
+// Add this to your theme's functions.php or a custom plugin
+function card_scraper_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'height' => '800px',
+        'url' => 'https://your-deployed-app.com'
+    ), $atts);
+    
+    return '&lt;div style="margin: 20px 0;"&gt;
+        &lt;iframe 
+            src="' . esc_url($atts['url']) . '" 
+            width="100%" 
+            height="' . esc_attr($atts['height']) . '" 
+            frameborder="0"
+            style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+            title="Card Scraper Application"
+            allow="fullscreen"&gt;
+        &lt;/iframe&gt;
+    &lt;/div&gt;';
+}
+add_shortcode('card_scraper', 'card_scraper_shortcode');
+        </div>
+
+        <p>Then use the shortcode in your posts: <code>[card_scraper height="600px"]</code></p>
+
+        <h2>Notes</h2>
+        <ul>
+            <li>Replace <code>https://your-deployed-app.com</code> with your actual deployed URL</li>
+            <li>Adjust the height as needed for your layout</li>
+            <li>Make sure your WordPress site allows iframe embedding</li>
+            <li>Consider adding loading states for better UX</li>
+        </ul>
+    </div>
+</body>
+</html>
