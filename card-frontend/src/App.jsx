@@ -19,33 +19,49 @@ function App() {
   const fetchCards = async () => {
     try {
       setLibraryLoading(true)
-      console.log('Fetching cards from Supabase...')
+      console.log('=== FETCHING CARDS DEBUG ===')
+      console.log('Supabase URL:', supabaseUrl)
+      console.log('Supabase Anon Key (first 20 chars):', supabaseAnonKey?.substring(0, 20) + '...')
       
-      const response = await fetch(`${supabaseUrl}/rest/v1/cards?select=*`, {
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      console.log('Cards API response status:', response.status)
+      const apiUrl = `${supabaseUrl}/rest/v1/cards?select=*`
+      console.log('Full API URL:', apiUrl)
+      
+      const headers = {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json'
+      }
+      console.log('Request headers:', headers)
+      
+      const response = await fetch(apiUrl, { headers })
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Cards API error response:', errorText)
+        console.error('❌ Cards API error response:', errorText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log('Fetched cards:', data)
-      console.log('Number of cards:', data.length)
-      setCards(data)
+      console.log('✅ Raw API response:', data)
+      console.log('✅ Number of cards:', data.length)
+      console.log('✅ Cards array:', data)
+      
+      if (Array.isArray(data)) {
+        setCards(data)
+        console.log('✅ Cards state updated with', data.length, 'cards')
+      } else {
+        console.error('❌ Response is not an array:', typeof data)
+        setCards([])
+      }
     } catch (error) {
-      console.error('Error fetching cards:', error)
+      console.error('❌ Error fetching cards:', error)
+      console.error('❌ Error details:', error.message)
       setSearchStatus('Error loading card library')
     } finally {
       setLibraryLoading(false)
+      console.log('=== END FETCHING CARDS DEBUG ===')
     }
   }
 
@@ -154,13 +170,30 @@ function App() {
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
                 Card Library
               </h2>
-              <button
-                onClick={fetchCards}
-                disabled={libraryLoading}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white text-sm rounded-md transition duration-200"
-              >
-                {libraryLoading ? 'Loading...' : 'Refresh'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={fetchCards}
+                  disabled={libraryLoading}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white text-sm rounded-md transition duration-200"
+                >
+                  {libraryLoading ? 'Loading...' : 'Refresh'}
+                </button>
+                <button
+                  onClick={() => {
+                    console.log('=== DEBUG: Current cards state ===')
+                    console.log('Cards array:', cards)
+                    console.log('Cards length:', cards.length)
+                    console.log('Library loading:', libraryLoading)
+                    console.log('Environment variables:')
+                    console.log('- VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL)
+                    console.log('- VITE_SUPABASE_ANON_KEY (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
+                    console.log('=== END DEBUG ===')
+                  }}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-md transition duration-200"
+                >
+                  Debug
+                </button>
+              </div>
             </div>
             
             {libraryLoading ? (
@@ -171,9 +204,12 @@ function App() {
             ) : cards.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600 dark:text-gray-400">No cards found. Start by searching for a card above.</p>
+                <p className="text-xs text-gray-500 mt-2">Debug: Cards array length is {cards.length}</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Found {cards.length} card(s)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {cards.map((card, index) => (
                   <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -201,6 +237,7 @@ function App() {
                     )}
                   </div>
                 ))}
+                </div>
               </div>
             )}
           </div>
