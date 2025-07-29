@@ -122,6 +122,8 @@ function App() {
         console.log(`✅ Using approach ${successfulApproach} with ${priceData.length} price entries`)
         console.log('Sample price data:', priceData[0]) // Debug the structure
         console.log('Price data keys:', Object.keys(priceData[0] || {}))
+        console.log('=== DETAILED PRICE DATA ANALYSIS ===')
+        console.log('First 3 price entries:', priceData.slice(0, 3))
         
         // Update cards with price information based on the successful approach
         const updatedCards = cards.map(card => {
@@ -143,6 +145,15 @@ function App() {
               })
             } else {
               console.log(`❌ No price data found for ${card.name} (${card.id})`)
+              // Try to find any price entry with similar ID
+              const similarPrice = priceData.find(price => 
+                price.card_id && card.id && 
+                (price.card_id.toString().includes(card.id.substring(0, 8)) || 
+                 card.id.includes(price.card_id.toString().substring(0, 8)))
+              )
+              if (similarPrice) {
+                console.log(`🔍 Found similar price entry:`, similarPrice)
+              }
             }
             
             return {
@@ -445,6 +456,34 @@ function App() {
                 className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 hover:from-orange-600 hover:via-red-600 hover:to-red-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 💰 Test Prices
+              </button>
+              <button
+                onClick={async () => {
+                  console.log('=== DIRECT PRICE DATA CHECK ===')
+                  try {
+                    const response = await fetch(`${supabaseUrl}/rest/v1/card_prices?select=*&limit=3`, {
+                      headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`,
+                        'Content-Type': 'application/json'
+                      }
+                    })
+                    if (response.ok) {
+                      const data = await response.json()
+                      console.log('Direct price data sample:', data)
+                      console.log('Price data structure:', data.map(item => ({
+                        keys: Object.keys(item),
+                        values: Object.values(item)
+                      })))
+                    }
+                  } catch (error) {
+                    console.error('Error checking price data:', error)
+                  }
+                  console.log('=== END DIRECT PRICE DATA CHECK ===')
+                }}
+                className="bg-gradient-to-r from-purple-500 via-purple-600 to-pink-600 hover:from-purple-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
+              >
+                🔍 Check Price Data
               </button>
             </div>
           </div>
