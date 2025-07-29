@@ -11,6 +11,7 @@ function App() {
   const APP_VERSION = '4.1.0'
   const BUILD_DATE = '29/07/2025, 14:45:00'
   const DEPLOY_TIME = '29/07/2025, 14:45:00'
+  const CACHE_BUSTER = '2025-07-29-14-50-00' // Force cache refresh
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
