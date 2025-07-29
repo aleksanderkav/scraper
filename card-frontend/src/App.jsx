@@ -233,6 +233,37 @@ function App() {
           console.log('- Direct match:', firstCard?.id === firstPrice?.card_id)
           console.log('- String match:', firstCard?.id?.toString() === firstPrice?.card_id?.toString())
           console.log('- UUID without dashes:', firstCard?.id?.replace(/-/g, '') === firstPrice?.card_id?.toString())
+          
+          // CRITICAL: Test the actual mapping logic that's failing
+          console.log('=== MAPPING LOGIC TEST ===')
+          const testCard = cards[0]
+          const testPrice = priceData[0]
+          
+          // Test all the strategies from the code
+          const strategy1 = testPrice.card_id === testCard.id
+          const strategy2 = testPrice.card_id && testCard.id && testPrice.card_id.toString() === testCard.id.toString()
+          const strategy3 = testPrice.card_id && testCard.id && testPrice.card_id.toString().substring(0, 8) === testCard.id.substring(0, 8)
+          const strategy4 = typeof testPrice.card_id === 'number' && testCard.id && testPrice.card_id.toString() === testCard.id.replace(/-/g, '').substring(0, 8)
+          
+          console.log('Strategy 1 (Exact match):', strategy1)
+          console.log('Strategy 2 (String conversion):', strategy2)
+          console.log('Strategy 3 (First 8 chars):', strategy3)
+          console.log('Strategy 4 (Number to UUID):', strategy4)
+          
+          // Show what the mapping would produce
+          const mappedCard = {
+            ...testCard,
+            latest_price: testPrice?.latest_average || null,
+            price_count: testPrice?.price_count || 0,
+            last_price_update: testPrice?.last_updated || null
+          }
+          console.log('Mapped card result:', {
+            name: mappedCard.name,
+            latest_price: mappedCard.latest_price,
+            price_count: mappedCard.price_count,
+            last_price_update: mappedCard.last_price_update
+          })
+          console.log('=== END MAPPING LOGIC TEST ===')
           console.log('=== END CRITICAL DEBUGGING ===')
         }
         
