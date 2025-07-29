@@ -280,38 +280,38 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12 space-y-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16 space-y-12">
         {/* Main Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6">
-            <span className="text-2xl">🎴</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-8 shadow-xl">
+            <span className="text-3xl">🎴</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent mb-4">
+          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-6 leading-tight">
             Trading Card Price Tracker
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed font-medium">
             Track and analyze trading card prices from eBay and other marketplaces
           </p>
         </div>
 
         {/* Search Form */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 md:p-10 border border-white/20 dark:border-gray-700/50">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl mb-4">
-                <span className="text-xl">🔍</span>
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-10 md:p-12 border border-white/30 dark:border-gray-700/60">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
+                <span className="text-2xl">🔍</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
                 Search for Cards
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg">
+              <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl font-medium">
                 Enter a card name to scrape current market prices
               </p>
             </div>
-            <form onSubmit={handleSearch} className="space-y-6">
+            <form onSubmit={handleSearch} className="space-y-8">
               <div>
-                <label htmlFor="search" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                <label htmlFor="search" className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-4">
                   Card Name & Condition
                 </label>
                 <input
@@ -320,22 +320,22 @@ function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="e.g., Pikachu PSA 10, Charizard PSA 9"
-                  className="w-full px-6 py-4 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 shadow-sm"
+                  className="w-full px-8 py-5 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 shadow-lg"
                   required
                 />
-                <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-4 text-base text-gray-500 dark:text-gray-400 font-medium">
                   Include the card name and condition (PSA grade) for best results
                 </p>
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:transform-none text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-5 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:transform-none text-xl shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                    <span>Scraping Prices...</span>
+                    <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white mr-4"></div>
+                    <span className="text-lg">Scraping Prices...</span>
                   </div>
                 ) : (
                   '🚀 Search & Scrape Prices'
@@ -345,16 +345,16 @@ function App() {
             
             {/* Status Message */}
             {searchStatus && (
-              <div className={`mt-6 p-4 rounded-xl border-2 ${
+              <div className={`mt-8 p-6 rounded-2xl border-2 ${
                 searchStatus.includes('Error') 
                   ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' 
                   : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
               }`}>
                 <div className="flex items-center">
-                  <span className="text-xl mr-3">
+                  <span className="text-2xl mr-4">
                     {searchStatus.includes('Error') ? '❌' : '✅'}
                   </span>
-                  <span className="font-medium">{searchStatus}</span>
+                  <span className="font-bold text-lg">{searchStatus}</span>
                 </div>
               </div>
             )}
@@ -362,36 +362,36 @@ function App() {
         </div>
 
         {/* Card Library */}
-        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 md:p-10 border border-white/20 dark:border-gray-700/50">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-6">
+        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-10 md:p-12 border border-white/30 dark:border-gray-700/60">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-8">
             <div>
-              <div className="flex items-center mb-3">
-                <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-blue-600 rounded-xl mr-3">
-                  <span className="text-lg">📚</span>
+              <div className="flex items-center mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-600 rounded-2xl mr-4 shadow-lg">
+                  <span className="text-xl">📚</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
                   Card Library
                 </h2>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg">
+              <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl font-medium">
                 Your collection of scraped trading cards with current market prices
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               <button
                 onClick={fetchCards}
                 disabled={libraryLoading}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl py-3 px-6 text-sm font-semibold transition-all duration-300 transform hover:scale-105 disabled:transform-none flex items-center shadow-lg"
+                className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-indigo-700 hover:to-indigo-800 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 disabled:transform-none flex items-center shadow-xl"
               >
                 {libraryLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Loading...
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    <span className="text-base">Loading...</span>
                   </>
                 ) : (
                   <>
-                    <span className="mr-2">🔄</span>
-                    Refresh
+                    <span className="mr-3 text-lg">🔄</span>
+                    <span className="text-base">Refresh</span>
                   </>
                 )}
               </button>
@@ -406,19 +406,19 @@ function App() {
                   console.log('- VITE_SUPABASE_ANON_KEY (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
                   console.log('=== END DEBUG ===')
                 }}
-                className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white rounded-xl py-3 px-6 text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-600 hover:from-yellow-600 hover:via-orange-600 hover:to-orange-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 🐛 Debug
               </button>
               <button
                 onClick={checkDatabaseDirectly}
-                className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-3 px-6 text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-red-500 via-red-600 to-pink-600 hover:from-red-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 🔍 Check DB
               </button>
               <button
                 onClick={() => fetchPriceData(cards)}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl py-3 px-6 text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+                className="bg-gradient-to-r from-orange-500 via-orange-600 to-red-600 hover:from-orange-600 hover:via-red-600 hover:to-red-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 💰 Test Prices
               </button>
@@ -437,80 +437,83 @@ function App() {
               </div>
             ) : (
               <div>
-                <p className="text-base text-gray-600 dark:text-gray-400 mb-6 font-medium">Found {cards.length} card(s)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 font-bold">Found {cards.length} card(s)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {cards.map((card, index) => (
-                    <div key={index} className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-white/20 dark:border-gray-700/50 overflow-hidden group transform hover:-translate-y-1">
+                    <div key={index} className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/40 dark:border-gray-700/60 overflow-hidden group transform hover:-translate-y-2">
                       {/* Card Header */}
-                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-purple-600 p-5 text-white relative overflow-hidden">
+                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-6 text-white relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
                         <div className="relative">
-                          <h3 className="font-bold text-lg truncate mb-1">
+                          <h3 className="font-bold text-xl truncate mb-2">
                             {card.name || 'Unknown Card'}
                           </h3>
-                          <p className="text-blue-100 text-sm opacity-90">
+                          <p className="text-blue-100 text-sm opacity-90 font-medium">
                             #{card.id?.substring(0, 8)}...
                           </p>
                         </div>
                       </div>
                       
                       {/* Card Content */}
-                      <div className="p-5 space-y-4">
+                      <div className="p-6 space-y-5">
                         {/* Price Information */}
                         {card.latest_price && card.latest_price > 0 ? (
-                          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-4 border border-green-200 dark:border-green-800 shadow-sm">
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-sm font-semibold text-green-800 dark:text-green-200">
+                          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="text-base font-bold text-green-800 dark:text-green-200">
                                 Latest Price
                               </span>
-                              <span className="text-xl font-bold text-green-600 dark:text-green-400">
+                              <span className="text-2xl font-bold text-green-600 dark:text-green-400">
                                 ${card.latest_price.toFixed(2)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-xs text-green-600 dark:text-green-400">
-                              <span className="bg-green-100 dark:bg-green-800 px-2 py-1 rounded-full">
+                            <div className="flex justify-between items-center">
+                              <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
                                 {card.price_count} entries
                               </span>
                               {card.last_price_update && (
-                                <span className="bg-green-100 dark:bg-green-800 px-2 py-1 rounded-full">
+                                <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
                                   {new Date(card.last_price_update).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800 shadow-sm">
+                          <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-5 border-2 border-blue-200 dark:border-blue-800 shadow-lg">
                             <div className="text-center">
-                              <div className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full mb-2">
-                                <span className="text-blue-600 dark:text-blue-400 text-sm">⏳</span>
+                              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full mb-3">
+                                <span className="text-blue-600 dark:text-blue-400 text-lg">⏳</span>
                               </div>
-                              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
-                                Price data will be updated soon
+                              <p className="text-base text-blue-800 dark:text-blue-200 font-bold">
+                                Price not available yet
+                              </p>
+                              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                                Try checking again later
                               </p>
                             </div>
                           </div>
                         )}
                         
                         {/* Card Details */}
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           {card.condition && (
-                            <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Condition:</span>
-                              <span className="text-sm font-semibold text-gray-900 dark:text-white">{card.condition}</span>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                              <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Condition:</span>
+                              <span className="text-base font-bold text-gray-900 dark:text-white">{card.condition}</span>
                             </div>
                           )}
                           
                           {card.source && (
-                            <div className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                              <span className="text-sm text-gray-600 dark:text-gray-400">Source:</span>
-                              <span className="text-sm font-semibold text-gray-900 dark:text-white">{card.source}</span>
+                            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                              <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Source:</span>
+                              <span className="text-base font-bold text-gray-900 dark:text-white">{card.source}</span>
                             </div>
                           )}
                         </div>
                         
                         {/* Footer */}
-                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                          <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <p className="text-sm text-gray-500 dark:text-gray-500 text-center font-medium">
                             Added: {new Date(card.created_at).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
