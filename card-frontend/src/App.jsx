@@ -21,8 +21,8 @@ function App() {
       setLibraryLoading(true)
       console.log('=== FETCHING CARDS DEBUG ===')
       
-      // Fetch cards with their latest price data
-      const apiUrl = `${supabaseUrl}/rest/v1/cards?select=*,card_prices(latest_average,price_count,last_updated)&order=created_at.desc`
+      // First, try to fetch just the cards to ensure basic functionality works
+      const apiUrl = `${supabaseUrl}/rest/v1/cards?select=*&order=created_at.desc`
       console.log('Full API URL:', apiUrl)
       
       const headers = {
@@ -45,16 +45,15 @@ function App() {
       console.log('✅ Number of cards:', data.length)
       
       if (Array.isArray(data)) {
-        // Process the data to flatten the nested price information
-        const processedCards = data.map(card => ({
-          ...card,
-          latest_price: card.card_prices?.[0]?.latest_average || null,
-          price_count: card.card_prices?.[0]?.price_count || 0,
-          last_price_update: card.card_prices?.[0]?.last_updated || null
-        }))
+        // For now, just set the basic card data without price information
+        setCards(data)
+        console.log('✅ Cards state updated with', data.length, 'cards')
         
-        setCards(processedCards)
-        console.log('✅ Cards state updated with', processedCards.length, 'cards')
+        // If we have cards, try to fetch price data separately
+        if (data.length > 0) {
+          console.log('Attempting to fetch price data for cards...')
+          await fetchPriceData(data)
+        }
       } else {
         console.error('❌ Response is not an array:', typeof data)
         setCards([])
@@ -66,6 +65,51 @@ function App() {
     } finally {
       setLibraryLoading(false)
       console.log('=== END FETCHING CARDS DEBUG ===')
+    }
+  }
+
+  const fetchPriceData = async (cards) => {
+    try {
+      console.log('=== FETCHING PRICE DATA ===')
+      
+      // Fetch price data for all cards
+      const priceUrl = `${supabaseUrl}/rest/v1/card_prices?select=*&order=last_updated.desc`
+      console.log('Price API URL:', priceUrl)
+      
+      const headers = {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json'
+      }
+      
+      const response = await fetch(priceUrl, { headers })
+      console.log('Price response status:', response.status)
+      
+      if (response.ok) {
+        const priceData = await response.json()
+        console.log('✅ Price data:', priceData)
+        
+        // Update cards with price information
+        const updatedCards = cards.map(card => {
+          const cardPrice = priceData.find(price => price.card_id === card.id)
+          return {
+            ...card,
+            latest_price: cardPrice?.latest_average || null,
+            price_count: cardPrice?.price_count || 0,
+            last_price_update: cardPrice?.last_updated || null
+          }
+        })
+        
+        setCards(updatedCards)
+        console.log('✅ Cards updated with price data')
+      } else {
+        console.log('⚠️ Could not fetch price data, but cards are loaded')
+      }
+    } catch (error) {
+      console.error('❌ Error fetching price data:', error)
+      // Don't fail the whole operation if price data fails
+    } finally {
+      console.log('=== END FETCHING PRICE DATA ===')
     }
   }
 
@@ -337,7 +381,7 @@ function App() {
                       {/* Card Content */}
                       <div className="p-4 space-y-3">
                         {/* Price Information */}
-                        {card.latest_price ? (
+                        {card.latest_price && card.latest_price > 0 ? (
                           <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-200 dark:border-green-800">
                             <div className="flex justify-between items-center">
                               <span className="text-sm font-medium text-green-800 dark:text-green-200">
@@ -359,10 +403,15 @@ function App() {
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                              No price data available
-                            </p>
+                          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+                            <div className="text-center">
+                              <p className="text-sm text-blue-800 dark:text-blue-200 font-medium">
+                                Card Added Successfully
+                              </p>
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                Price data will be updated soon
+                              </p>
+                            </div>
                           </div>
                         )}
                         
