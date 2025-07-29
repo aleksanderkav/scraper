@@ -9,7 +9,7 @@ function App() {
   const [deployTime] = useState(() => new Date().toLocaleString())
   
   // Version tracking
-  const APP_VERSION = '2.1.0'
+  const APP_VERSION = '2.4.0'
   const BUILD_DATE = new Date().toLocaleString()
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -47,16 +47,21 @@ function App() {
       console.log('✅ Fetched', cardsWithPrices.length, 'cards with prices')
       
       if (Array.isArray(cardsWithPrices)) {
-        // Log sample card structure
+        // Enhanced debugging for price display
         if (cardsWithPrices.length > 0) {
-          console.log('=== SAMPLE CARD ===')
-          console.log('Sample:', {
-            name: cardsWithPrices[0].name,
-            latest_price: cardsWithPrices[0].latest_price,
-            price_count: cardsWithPrices[0].price_count,
-            last_price_update: cardsWithPrices[0].last_price_update
+          console.log('=== DETAILED CARD ANALYSIS ===')
+          cardsWithPrices.slice(0, 3).forEach((card, index) => {
+            console.log(`Card ${index + 1}:`, {
+              name: card.name,
+              latest_price: card.latest_price,
+              price_count: card.price_count,
+              last_price_update: card.last_price_update,
+              hasPrice: card.latest_price && card.latest_price > 0,
+              priceType: typeof card.latest_price,
+              priceValue: card.latest_price
+            })
           })
-          console.log('=== END SAMPLE ===')
+          console.log('=== END DETAILED ANALYSIS ===')
         }
         
         setCards(cardsWithPrices)
@@ -78,9 +83,9 @@ function App() {
 
   const checkDatabaseDirectly = async () => {
     try {
-      console.log('=== TESTING CARDS_WITH_PRICES VIEW ===')
+      console.log('=== COMPREHENSIVE VIEW TEST ===')
       
-      const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=3`, {
+      const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=5`, {
         headers: {
           'apikey': supabaseAnonKey,
           'Authorization': `Bearer ${supabaseAnonKey}`,
@@ -92,16 +97,38 @@ function App() {
       if (response.ok) {
         const data = await response.json()
         console.log(`✅ View test result:`, data)
-        console.log(`✅ Sample card:`, data[0])
+        
+        // Test each card's price data
+        data.forEach((card, index) => {
+          console.log(`Card ${index + 1} - ${card.name}:`, {
+            latest_price: card.latest_price,
+            price_count: card.price_count,
+            last_price_update: card.last_price_update,
+            hasPrice: card.latest_price && card.latest_price > 0,
+            priceType: typeof card.latest_price,
+            willDisplayPrice: card.latest_price && card.latest_price > 0
+          })
+        })
+        
+        // Test price display logic
+        const cardsWithPrices = data.filter(card => card.latest_price && card.latest_price > 0)
+        const cardsWithoutPrices = data.filter(card => !card.latest_price || card.latest_price <= 0)
+        
+        console.log(`📊 Summary:`, {
+          totalCards: data.length,
+          cardsWithPrices: cardsWithPrices.length,
+          cardsWithoutPrices: cardsWithoutPrices.length,
+          samplePriceCard: cardsWithPrices[0]?.name,
+          sampleNoPriceCard: cardsWithoutPrices[0]?.name
+        })
       } else {
         const errorText = await response.text()
         console.log(`❌ View test failed:`, errorText)
       }
-      
     } catch (error) {
       console.error('❌ View test error:', error)
     } finally {
-      console.log('=== END VIEW TEST ===')
+      console.log('=== END COMPREHENSIVE TEST ===')
     }
   }
 
@@ -152,53 +179,58 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-16 space-y-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 space-y-8 sm:space-y-12">
         {/* Main Header */}
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-8 shadow-xl">
-            <span className="text-3xl">🎴</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-6 sm:mb-8 shadow-xl">
+            <span className="text-2xl sm:text-3xl">🎴</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-4 sm:mb-6 leading-tight">
             Trading Card Price Tracker
           </h1>
-          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed font-medium">
+          <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 max-w-4xl mx-auto leading-relaxed font-medium px-4">
             Track and analyze trading card prices from eBay and other marketplaces
           </p>
           
           {/* Version Info */}
-          <div className="mt-6 p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl border border-white/40 dark:border-gray-700/40 inline-block">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-blue-600 dark:text-blue-400">v{APP_VERSION}</span>
-                <span className="text-gray-400">•</span>
-                <span>Built: {BUILD_DATE}</span>
+          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-blue-900/30 dark:via-purple-900/30 dark:to-indigo-900/30 backdrop-blur-sm rounded-2xl border-2 border-blue-200 dark:border-blue-700 shadow-lg mx-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 lg:gap-6 text-sm sm:text-base text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="font-bold text-blue-700 dark:text-blue-300 text-base sm:text-lg">v{APP_VERSION}</span>
+                <span className="text-slate-400 text-base sm:text-lg">•</span>
+                <span className="font-medium">Built: {BUILD_DATE}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400">•</span>
-                <span>Deployed: {deployTime}</span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="text-slate-400 text-base sm:text-lg">•</span>
+                <span className="font-medium">Deployed: {deployTime}</span>
               </div>
+            </div>
+            <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-blue-200 dark:border-blue-700">
+              <p className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium text-center sm:text-left">
+                🔧 Using cards_with_prices view • 💰 Price display active • 🚀 Scrape integration ready • 📱 Mobile optimized
+              </p>
             </div>
           </div>
         </div>
 
         {/* Search Form */}
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-10 md:p-12 border border-white/30 dark:border-gray-700/60">
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
-                <span className="text-2xl">🔍</span>
+        <div className="max-w-3xl mx-auto px-4">
+          <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-white/30 dark:border-slate-700/60">
+            <div className="text-center mb-8 sm:mb-10">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 rounded-2xl mb-4 sm:mb-6 shadow-lg">
+                <span className="text-xl sm:text-2xl">🔍</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-4">
                 Search for Cards
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl font-medium">
+              <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-medium">
                 Enter a card name to scrape current market prices
               </p>
             </div>
-            <form onSubmit={handleSearch} className="space-y-8">
+            <form onSubmit={handleSearch} className="space-y-6 sm:space-y-8">
               <div>
-                <label htmlFor="search" className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-4">
+                <label htmlFor="search" className="block text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 mb-3 sm:mb-4">
                   Card Name & Condition
                 </label>
                 <input
@@ -207,22 +239,22 @@ function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="e.g., Pikachu PSA 10, Charizard PSA 9"
-                  className="w-full px-8 py-5 text-lg border-2 border-gray-200 dark:border-gray-600 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-300 shadow-lg"
+                  className="w-full px-4 sm:px-8 py-4 sm:py-5 text-base sm:text-lg border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 dark:bg-slate-700 dark:text-white transition-all duration-300 shadow-lg"
                   required
                 />
-                <p className="mt-4 text-base text-gray-500 dark:text-gray-400 font-medium">
+                <p className="mt-3 sm:mt-4 text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">
                   Include the card name and condition (PSA grade) for best results
                 </p>
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-5 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:transform-none text-xl shadow-xl"
+                className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 disabled:from-slate-400 disabled:to-slate-500 text-white font-bold py-4 sm:py-5 px-6 sm:px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 disabled:transform-none text-lg sm:text-xl shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white mr-4"></div>
-                    <span className="text-lg">Scraping Prices...</span>
+                    <div className="animate-spin rounded-full h-6 w-6 sm:h-7 sm:w-7 border-b-2 border-white mr-3 sm:mr-4"></div>
+                    <span className="text-base sm:text-lg">Scraping Prices...</span>
                   </div>
                 ) : (
                   '🚀 Search & Scrape Prices'
@@ -232,16 +264,16 @@ function App() {
             
             {/* Status Message */}
             {searchStatus && (
-              <div className={`mt-8 p-6 rounded-2xl border-2 ${
+              <div className={`mt-6 sm:mt-8 p-4 sm:p-6 rounded-2xl border-2 ${
                 searchStatus.includes('Error') 
                   ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200' 
                   : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
               }`}>
                 <div className="flex items-center">
-                  <span className="text-2xl mr-4">
+                  <span className="text-xl sm:text-2xl mr-3 sm:mr-4">
                     {searchStatus.includes('Error') ? '❌' : '✅'}
                   </span>
-                  <span className="font-bold text-lg">{searchStatus}</span>
+                  <span className="font-bold text-base sm:text-lg">{searchStatus}</span>
                 </div>
               </div>
             )}
@@ -249,36 +281,36 @@ function App() {
         </div>
 
         {/* Card Library */}
-        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-10 md:p-12 border border-white/30 dark:border-gray-700/60">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-8">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 xl:p-12 border border-white/30 dark:border-slate-700/60">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8 sm:mb-10 gap-6 sm:gap-8">
             <div>
-              <div className="flex items-center mb-4">
-                <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-600 rounded-2xl mr-4 shadow-lg">
-                  <span className="text-xl">📚</span>
+              <div className="flex items-center mb-3 sm:mb-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-600 rounded-2xl mr-3 sm:mr-4 shadow-lg">
+                  <span className="text-lg sm:text-xl">📚</span>
                 </div>
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white">
                   Card Library
                 </h2>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl font-medium">
+              <p className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-medium">
                 Your collection of scraped trading cards with current market prices
               </p>
             </div>
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3 sm:gap-4">
               <button
                 onClick={fetchCards}
                 disabled={libraryLoading}
-                className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-indigo-700 hover:to-indigo-800 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 disabled:transform-none flex items-center shadow-xl"
+                className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-indigo-700 hover:to-indigo-800 disabled:from-slate-400 disabled:to-slate-500 text-white rounded-2xl py-3 sm:py-4 px-6 sm:px-8 text-sm sm:text-base font-bold transition-all duration-300 transform hover:scale-105 disabled:transform-none flex items-center shadow-xl"
               >
                 {libraryLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    <span className="text-base">Loading...</span>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white mr-2 sm:mr-3"></div>
+                    <span className="text-sm sm:text-base">Loading...</span>
                   </>
                 ) : (
                   <>
-                    <span className="mr-3 text-lg">🔄</span>
-                    <span className="text-base">Refresh</span>
+                    <span className="mr-2 sm:mr-3 text-base sm:text-lg">🔄</span>
+                    <span className="text-sm sm:text-base">Refresh</span>
                   </>
                 )}
               </button>
@@ -298,6 +330,10 @@ function App() {
                     console.log('- latest_price:', cards[0].latest_price, 'Type:', typeof cards[0].latest_price)
                     console.log('- price_count:', cards[0].price_count, 'Type:', typeof cards[0].price_count)
                     console.log('- last_price_update:', cards[0].last_price_update, 'Type:', typeof cards[0].last_price_update)
+                    console.log('Price display logic:')
+                    console.log('- card.latest_price && card.latest_price > 0:', cards[0].latest_price && cards[0].latest_price > 0)
+                    console.log('- card.latest_price value:', cards[0].latest_price)
+                    console.log('- card.latest_price > 0:', cards[0].latest_price > 0)
                     console.log('=== END FIRST CARD STRUCTURE ===')
                   }
                   
@@ -306,21 +342,21 @@ function App() {
                   console.log('- VITE_SUPABASE_ANON_KEY (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
                   console.log('=== END DEBUG ===')
                 }}
-                className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-600 hover:from-yellow-600 hover:via-orange-600 hover:to-orange-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
+                className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-600 hover:from-yellow-600 hover:via-orange-600 hover:to-orange-700 text-white rounded-2xl py-3 sm:py-4 px-6 sm:px-8 text-sm sm:text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
-                🐛 Debug
+                🐛 Debug Prices
               </button>
               <button
                 onClick={checkDatabaseDirectly}
-                className="bg-gradient-to-r from-red-500 via-red-600 to-pink-600 hover:from-red-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
+                className="bg-gradient-to-r from-red-500 via-red-600 to-pink-600 hover:from-red-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-3 sm:py-4 px-6 sm:px-8 text-sm sm:text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
                 🔍 Check DB
               </button>
               <button
                 onClick={async () => {
-                  console.log('=== TESTING CARDS_WITH_PRICES VIEW ===')
+                  console.log('=== COMPREHENSIVE VIEW TEST ===')
                   try {
-                    const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=3`, {
+                    const response = await fetch(`${supabaseUrl}/rest/v1/cards_with_prices?select=*&limit=5`, {
                       headers: {
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${supabaseAnonKey}`,
@@ -332,11 +368,29 @@ function App() {
                     if (response.ok) {
                       const data = await response.json()
                       console.log(`✅ View test result:`, data)
-                      console.log(`✅ Sample card:`, data[0])
-                      console.log(`✅ Price fields:`, {
-                        latest_price: data[0]?.latest_price,
-                        price_count: data[0]?.price_count,
-                        last_price_update: data[0]?.last_price_update
+                      
+                      // Test each card's price data
+                      data.forEach((card, index) => {
+                        console.log(`Card ${index + 1} - ${card.name}:`, {
+                          latest_price: card.latest_price,
+                          price_count: card.price_count,
+                          last_price_update: card.last_price_update,
+                          hasPrice: card.latest_price && card.latest_price > 0,
+                          priceType: typeof card.latest_price,
+                          willDisplayPrice: card.latest_price && card.latest_price > 0
+                        })
+                      })
+                      
+                      // Test price display logic
+                      const cardsWithPrices = data.filter(card => card.latest_price && card.latest_price > 0)
+                      const cardsWithoutPrices = data.filter(card => !card.latest_price || card.latest_price <= 0)
+                      
+                      console.log(`📊 Summary:`, {
+                        totalCards: data.length,
+                        cardsWithPrices: cardsWithPrices.length,
+                        cardsWithoutPrices: cardsWithoutPrices.length,
+                        samplePriceCard: cardsWithPrices[0]?.name,
+                        sampleNoPriceCard: cardsWithoutPrices[0]?.name
                       })
                     } else {
                       const errorText = await response.text()
@@ -345,75 +399,75 @@ function App() {
                   } catch (error) {
                     console.error('❌ View test error:', error)
                   }
-                  console.log('=== END VIEW TEST ===')
+                  console.log('=== END COMPREHENSIVE TEST ===')
                 }}
-                className="bg-gradient-to-r from-purple-500 via-purple-600 to-pink-600 hover:from-purple-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-4 px-8 text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
+                className="bg-gradient-to-r from-purple-500 via-purple-600 to-pink-600 hover:from-purple-600 hover:via-pink-600 hover:to-pink-700 text-white rounded-2xl py-3 sm:py-4 px-6 sm:px-8 text-sm sm:text-base font-bold transition-all duration-300 transform hover:scale-105 shadow-xl"
               >
-                🔍 Test View
+                🔍 Test View & Prices
               </button>
             </div>
           </div>
             
             {libraryLoading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <p className="mt-2 text-gray-600 dark:text-gray-400">Loading cards...</p>
+              <div className="text-center py-6 sm:py-8">
+                <div className="inline-block animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm sm:text-base">Loading cards...</p>
               </div>
             ) : cards.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600 dark:text-gray-400">No cards found. Start by searching for a card above.</p>
-                <p className="text-xs text-gray-500 mt-2">Debug: Cards array length is {cards.length}</p>
+              <div className="text-center py-6 sm:py-8">
+                <p className="text-slate-600 dark:text-slate-400 text-sm sm:text-base">No cards found. Start by searching for a card above.</p>
+                <p className="text-xs text-slate-500 mt-2">Debug: Cards array length is {cards.length}</p>
               </div>
             ) : (
               <div>
-                <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 font-bold">Found {cards.length} card(s)</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mb-6 sm:mb-8 font-bold">Found {cards.length} card(s)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                   {cards.map((card, index) => (
-                    <div key={index} className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/40 dark:border-gray-700/60 overflow-hidden group transform hover:-translate-y-2">
+                    <div key={index} className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-white/40 dark:border-slate-700/60 overflow-hidden group transform hover:-translate-y-2">
                       {/* Card Header */}
-                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-6 text-white relative overflow-hidden">
+                      <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 p-4 sm:p-6 text-white relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
                         <div className="relative">
-                          <h3 className="font-bold text-xl truncate mb-2">
+                          <h3 className="font-bold text-lg sm:text-xl truncate mb-1 sm:mb-2">
                             {card.name || 'Unknown Card'}
                           </h3>
-                          <p className="text-blue-100 text-sm opacity-90 font-medium">
+                          <p className="text-blue-100 text-xs sm:text-sm opacity-90 font-medium">
                             #{card.id?.substring(0, 8)}...
                           </p>
                         </div>
                       </div>
                       
                       {/* Card Content */}
-                      <div className="p-6 space-y-5">
+                      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
                         {/* Price Information */}
                         {card.latest_price && card.latest_price > 0 ? (
-                          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
-                            <div className="flex justify-between items-center mb-4">
-                              <span className="text-base font-bold text-green-800 dark:text-green-200">
+                          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 dark:from-green-900/20 dark:via-emerald-900/20 dark:to-teal-900/20 rounded-2xl p-4 sm:p-5 border-2 border-green-200 dark:border-green-800 shadow-lg">
+                            <div className="flex justify-between items-center mb-3 sm:mb-4">
+                              <span className="text-sm sm:text-base font-bold text-green-800 dark:text-green-200">
                                 💰 Latest Price
                               </span>
-                              <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                              <span className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
                                 ${card.latest_price.toFixed(2)}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+                              <span className="bg-green-100 dark:bg-green-800 px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 text-center">
                                 📊 {card.price_count} entries
                               </span>
                               {card.last_price_update && (
-                                <span className="bg-green-100 dark:bg-green-800 px-3 py-2 rounded-full text-sm font-semibold text-green-700 dark:text-green-300">
+                                <span className="bg-green-100 dark:bg-green-800 px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 text-center">
                                   📅 {new Date(card.last_price_update).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
                           </div>
                         ) : (
-                          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 rounded-2xl p-5 border-2 border-orange-200 dark:border-orange-800 shadow-lg">
+                          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-900/20 dark:via-amber-900/20 dark:to-yellow-900/20 rounded-2xl p-4 sm:p-5 border-2 border-orange-200 dark:border-orange-800 shadow-lg">
                             <div className="text-center">
-                              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-800 rounded-full mb-3">
-                                <span className="text-orange-600 dark:text-orange-400 text-lg">💰</span>
+                              <div className="inline-flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 dark:bg-orange-800 rounded-full mb-2 sm:mb-3">
+                                <span className="text-orange-600 dark:text-orange-400 text-base sm:text-lg">💰</span>
                               </div>
-                              <p className="text-base text-orange-800 dark:text-orange-200 font-bold mb-3">
+                              <p className="text-sm sm:text-base text-orange-800 dark:text-orange-200 font-bold mb-2 sm:mb-3">
                                 No Price Data Available
                               </p>
                               <button
@@ -438,7 +492,7 @@ function App() {
                                     console.error('Error scraping prices:', error)
                                   }
                                 }}
-                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg"
                               >
                                 🚀 Scrape Prices
                               </button>
@@ -447,25 +501,25 @@ function App() {
                         )}
                         
                         {/* Card Details */}
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                           {card.condition && (
-                            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                              <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Condition:</span>
-                              <span className="text-base font-bold text-gray-900 dark:text-white">{card.condition}</span>
+                            <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                              <span className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">Condition:</span>
+                              <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{card.condition}</span>
                             </div>
                           )}
                           
                           {card.source && (
-                            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                              <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Source:</span>
-                              <span className="text-base font-bold text-gray-900 dark:text-white">{card.source}</span>
+                            <div className="flex justify-between items-center p-2 sm:p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                              <span className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">Source:</span>
+                              <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{card.source}</span>
                             </div>
                           )}
                         </div>
                         
                         {/* Footer */}
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                          <p className="text-sm text-gray-500 dark:text-gray-500 text-center font-medium">
+                        <div className="pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
+                          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-500 text-center font-medium">
                             Added: {new Date(card.created_at).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
@@ -483,13 +537,13 @@ function App() {
             )}
           </div>
         </div>
+        {/* Footer with deployment time */}
+        <footer className="fixed bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+          <span className="text-xs text-slate-400 bg-white/80 dark:bg-slate-900/80 px-2 sm:px-3 py-1 rounded shadow-sm">
+            Last deployed: {deployTime}
+          </span>
+        </footer>
       </div>
-      {/* Footer with deployment time */}
-      <footer className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-        <span className="text-xs text-gray-400 bg-white/80 dark:bg-gray-900/80 px-3 py-1 rounded shadow-sm">
-          Last deployed: {deployTime}
-        </span>
-      </footer>
     </div>
   )
 }
